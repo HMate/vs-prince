@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            http-equiv="Content-Security-Policy"
+            content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} https:; script-src ${webview.cspSource} 'nonce-${nonce}'; connect-src ${webview.cspSource};"
+        />
+    </head>
+    <body>
+        <link nonce="${nonce}" rel="stylesheet" href="${mediaUri}/webview-style.css" />
+        <script nonce="${nonce}" src="${mediaUri}/webview.js"></script>
+        <script nonce="${nonce}">
+            main("${mediaUri}");
+        </script>
+    </body>
+</html>
