@@ -5,7 +5,7 @@ import { SvgVisualElement } from "./SvgVisualElement";
 export class SvgRoot {
     private rootElem: SVGSVGElement;
     private viewportElem: SvgGroup;
-    private ZoomAmount: number = 1;
+    private zoomAmount: number = 1;
 
     private mouseMovementHandlers: Map<string, (ev: MouseEvent) => any> = new Map();
 
@@ -29,10 +29,10 @@ export class SvgRoot {
     }
 
     public zoom(value: number, origin: Coord) {
-        this.ZoomAmount += value;
+        this.zoomAmount += value;
 
         let scale = this.rootElem.createSVGTransform();
-        scale.setScale(this.ZoomAmount, this.ZoomAmount);
+        scale.setScale(this.zoomAmount, this.zoomAmount);
 
         let center = this.rootElem.createSVGTransform();
         center.setTranslate(origin.x, origin.y);
@@ -47,7 +47,7 @@ export class SvgRoot {
     }
 
     public getViewportScale(): number {
-        return 1 / this.ZoomAmount;
+        return 1 / this.zoomAmount;
     }
 
     public addMouseMovementHandler(key: string, handler: (ev: MouseEvent) => any) {

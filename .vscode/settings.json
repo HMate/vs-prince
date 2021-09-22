@@ -11,5 +11,11 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.rulers": [120],
     "typescript.tsdk": "node_modules\\typescript\\lib",
-    "explorer.autoReveal": false
+    "explorer.autoReveal": false,
+    "[javascript]": {
+        "editor.formatOnSave": true
+    },
+    "[typescript]": {
+        "editor.formatOnSave": true
+    }
 }
