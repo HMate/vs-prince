@@ -1,0 +1,20 @@
+@font-face {
+    font-family: "DynamoFont";
+    src: url(./font/RobotoMono.ttf);
+  }
+  html,
+  body,
+  .prince-svg-root {
+    height: 100%;
+    width: 100%;
+    background: whitesmoke;
+  }
+
+  .prince-box {
+      fill: #b4b3b3;
+  }
+
+  .prince-box-name {
+      font-size: 5vh;
+      text-anchor: middle;
+  }

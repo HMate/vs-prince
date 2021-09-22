@@ -8,16 +8,20 @@ export function activate(context: vscode.ExtensionContext) {
 
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
         if (cachedPanel == null) {
+            let workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
             cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
                 enableScripts: true,
-                localResourceRoots: [mediaUri],
+                localResourceRoots: [mediaUri].concat(workspaceUris),
             });
-        }
-        updateViewHtml(cachedPanel, mediaUri);
 
-        cachedPanel.onDidDispose(() => {
-            cachedPanel = null;
-        });
+            updateViewHtml(cachedPanel, mediaUri);
+
+            cachedPanel.onDidDispose(() => {
+                cachedPanel = null;
+            });
+        } else {
+            cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
+        }
     });
 
     context.subscriptions.push(disposable);

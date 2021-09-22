@@ -15,8 +15,8 @@ export class SvgVisualizationBuilder {
         }
 
         this.root = SVG().addTo("body").size(windowSize.width, windowSize.height);
-        this.root.id(rootId);
-        this.root.addClass("prince-svg-root");
+        this.root.id(`#${rootId}`);
+        this.root.addClass(`${rootId}-root`);
         this.root.viewbox(0, 0, windowSize.width, windowSize.height);
     }
 

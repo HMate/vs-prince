@@ -1,6 +1,9 @@
 import TextToSVG from "./TextToSvg";
 import "./font/RobotoMono.ttf";
+import "./webview-style.scss";
 import { SvgVisualizationBuilder } from "./SvgVisualizationBuilder";
+import "@svgdotjs/svg.draggable.js";
+import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 
 export function main(mediaUri: string) {
     TextToSVG.load(`${mediaUri}/font/RobotoMono.ttf`, (err: any, tts: TextToSVG | null) => {
@@ -13,6 +16,12 @@ export function main(mediaUri: string) {
 }
 
 function buildVisualization(svgId: string, tts: TextToSVG) {
-    const builder = new SvgVisualizationBuilder(`#${svgId}`);
-    builder.addCameraHandlers();
+    const baseBuilder = new BaseVisualizationBuilder(svgId);
+    baseBuilder.addCameraHandlers();
+
+    let box = baseBuilder.createBox({
+        name: "Balu kapitány",
+        boxStyle: { fill: "#66bb11" },
+        textStyle: { fontSize: "1000px" },
+    });
 }
