@@ -1,11 +1,14 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
+import { PrinceClient } from "./PrinceClient";
 
 export function activate(context: vscode.ExtensionContext) {
     let cachedPanel: vscode.WebviewPanel | null = null;
-    let disposable = vscode.commands.registerCommand("vs-prince.visualize", () => {
-        console.log("Command vs-prince.visualize started");
 
+    let logChannel = vscode.window.createOutputChannel("VSPrince");
+    logChannel.appendLine("Command vs-prince activated");
+
+    let disposable = vscode.commands.registerCommand("vs-prince.visualize", () => {
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
         if (cachedPanel == null) {
             let workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
@@ -21,6 +24,18 @@ export function activate(context: vscode.ExtensionContext) {
             });
         } else {
             cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
+            let filename = "D:\\projects\\testing\\pylab\\main.py";
+            let result = PrinceClient.callPrince(filename, "--dm");
+            let deps = {};
+            try {
+                deps = JSON.parse(result);
+            } catch (error) {
+                logChannel.appendLine(`Failed to parse json with error ${error}:\n${result}`);
+                return;
+            }
+
+            logChannel.appendLine(`Sending draw-dependencies for ${filename}`);
+            cachedPanel.webview.postMessage({ command: "draw-dependencies", data: deps });
         }
     });
 

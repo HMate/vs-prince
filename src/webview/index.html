@@ -12,6 +12,8 @@
         <link nonce="${nonce}" rel="stylesheet" href="${mediaUri}/webview-style.css" />
         <script nonce="${nonce}" src="${mediaUri}/webview.js"></script>
         <script nonce="${nonce}">
+
+            window.addEventListener("message", (event) => onExtensionMessage(event.data));
             main("${mediaUri}");
         </script>
     </body>

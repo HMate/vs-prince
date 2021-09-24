@@ -63,6 +63,11 @@ export class Box {
         return this;
     }
 
+    public move(cx: number, cy: number) {
+        this.root.cx(cx);
+        this.root.cy(cy);
+    }
+
     private addMovementHandlers(group: Container) {
         group.draggable();
     }

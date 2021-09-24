@@ -1,9 +1,13 @@
 import TextToSVG from "./TextToSvg";
 import "./font/RobotoMono.ttf";
 import "./webview-style.scss";
-import { SvgVisualizationBuilder } from "./SvgVisualizationBuilder";
 import "@svgdotjs/svg.draggable.js";
+
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
+import { BaseMessage, DrawDependenciesMessage } from "./extensionMessages";
+import { drawDependencies } from "./DependencyVisualizer";
+
+let baseBuilder: BaseVisualizationBuilder;
 
 export function main(mediaUri: string) {
     TextToSVG.load(`${mediaUri}/font/RobotoMono.ttf`, (err: any, tts: TextToSVG | null) => {
@@ -16,7 +20,7 @@ export function main(mediaUri: string) {
 }
 
 function buildVisualization(svgId: string, tts: TextToSVG) {
-    const baseBuilder = new BaseVisualizationBuilder(svgId);
+    baseBuilder = new BaseVisualizationBuilder(svgId);
     baseBuilder.addCameraHandlers();
 
     let box = baseBuilder.createBox({
@@ -24,4 +28,17 @@ function buildVisualization(svgId: string, tts: TextToSVG) {
         boxStyle: { fill: "#66bb11" },
         textStyle: { fontSize: "1000px" },
     });
+}
+
+export function onExtensionMessage(message: BaseMessage) {
+    console.log("Got message " + message.command);
+    if (baseBuilder == null) {
+        console.log(`Base builder should not be undefined: ${baseBuilder}`);
+        return;
+    }
+
+    if (message.command !== "draw-dependencies") {
+        return;
+    }
+    drawDependencies(baseBuilder, message as DrawDependenciesMessage);
 }

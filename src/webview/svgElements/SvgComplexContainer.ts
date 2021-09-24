@@ -1,5 +1,9 @@
 import { Svg, NumberAlias } from "@svgdotjs/svg.js";
 
+/**
+ * A container class that can hold other visual elements, and handles transformations hierarchically.
+ * Meaning that whenever this container is transformed, child elements are moved the same way
+ */
 export default class SvgComplexContainer extends Svg {
     constructor() {
         super();

@@ -23,7 +23,7 @@
         "keybindings": [
             {
                 "command": "vs-prince.visualize",
-                "key": "ctrl+alt+d"
+                "key": "ctrl+d"
             }
         ]
     },
