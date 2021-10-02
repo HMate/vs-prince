@@ -20,7 +20,7 @@ export function main(mediaUri: string) {
 }
 
 function buildVisualization(svgId: string, tts: TextToSVG) {
-    baseBuilder = new BaseVisualizationBuilder(svgId);
+    baseBuilder = new BaseVisualizationBuilder(svgId, tts);
     baseBuilder.addCameraHandlers();
 
     let box = baseBuilder.createBox({
@@ -40,5 +40,10 @@ export function onExtensionMessage(message: BaseMessage) {
     if (message.command !== "draw-dependencies") {
         return;
     }
+    clearDiagram(baseBuilder);
     drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+}
+
+function clearDiagram(baseBuilder: BaseVisualizationBuilder) {
+    baseBuilder.removeAllElements();
 }

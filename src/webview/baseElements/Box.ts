@@ -1,6 +1,7 @@
 import { Container, Rect, Text } from "@svgdotjs/svg.js";
 
 import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
+import TextToSVG from "../TextToSvg";
 
 export interface BoxDescription {
     name: string;
@@ -12,7 +13,8 @@ export interface BoxDescription {
 
 // A box is a rectanble shape with a name label
 export class Box {
-    static readonly defaultMinWidth = 300;
+    static readonly defaultMinWidth = 200;
+    static readonly defaultTextMarginWidth = 10;
     static readonly defaultHeight = 60;
     static readonly nameMarginTop = 20;
 
@@ -21,9 +23,19 @@ export class Box {
     private shapeHolder: Rect;
     private nameHolder: Text;
 
-    constructor(private readonly builder: BaseVisualizationBuilder, description?: BoxDescription) {
+    constructor(
+        private readonly builder: BaseVisualizationBuilder,
+        private tts: TextToSVG,
+        description?: BoxDescription
+    ) {
         this.desc = description ?? { name: "" };
-        this.desc.width = description?.width ?? Box.defaultMinWidth;
+        if (description?.width) {
+            this.desc.width = description?.width;
+        } else {
+            // TODO: Dontsize here ios the same as in webview-style.scss prince-box-name.
+            let calcWidth = this.tts.getWidth(this.desc.name, { fontSize: 22 }) + 2 * Box.defaultTextMarginWidth;
+            this.desc.width = Math.max(calcWidth, Box.defaultMinWidth);
+        }
         this.desc.height = description?.height ?? Box.defaultHeight;
         this.desc.boxStyle = description?.boxStyle;
         this.desc.textStyle = description?.textStyle;
@@ -59,8 +71,16 @@ export class Box {
 
     public update() {
         this.nameHolder.text(this.desc.name);
-        this.nameHolder.center(Number(this.shapeHolder.width()) / 2, Box.nameMarginTop);
+        this.nameHolder.center(Number(this.shapeHolder.width()) / 2, Number(this.shapeHolder.height()) / 2);
         return this;
+    }
+
+    public width(): number {
+        return Number(this.shapeHolder.width());
+    }
+
+    public height(): number {
+        return Number(this.shapeHolder.height());
     }
 
     public move(cx: number, cy: number) {

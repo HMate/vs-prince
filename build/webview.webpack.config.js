@@ -13,6 +13,7 @@ const config = {
     target: "electron-renderer",
     mode: "none", // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
 
+    devtool: "source-map",
     entry: "./src/webview/webview.ts",
     output: {
         // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/

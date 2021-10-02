@@ -1,13 +1,15 @@
-import { Point } from "./utils";
 import { Svg, SVG, Element, Rect, Text, Circle, Container } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.panzoom.js";
-import SvgComplexContainer from "./svgElements/SvgComplexContainer";
 import { Marker } from "@svgdotjs/svg.js";
+
+import SvgComplexContainer from "./svgElements/SvgComplexContainer";
+import { Point } from "./utils";
+import TextToSVG from "./TextToSvg";
 
 export class SvgVisualizationBuilder {
     readonly root: Svg;
     private readonly registeredDefs: { [id: string]: Marker } = {};
-    constructor(rootId: string) {
+    constructor(rootId: string, protected tts: TextToSVG) {
         let bodyRect = document?.getElementsByTagName("body")?.item(0)?.getBoundingClientRect();
         let windowSize = { width: 1600, height: 1200 };
         if (bodyRect != null) {
@@ -30,6 +32,12 @@ export class SvgVisualizationBuilder {
 
     public removeFromRoot(child: Element) {
         this.root.removeElement(child);
+    }
+
+    public removeAllElements() {
+        for (let child of this.root.children()) {
+            child.remove();
+        }
     }
 
     public registerDef(name: string, width: number, height: number, block?: ((marker: Marker) => void) | undefined) {
