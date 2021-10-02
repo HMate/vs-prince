@@ -2,13 +2,14 @@ import { Container, Rect, Text } from "@svgdotjs/svg.js";
 
 import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
 import TextToSVG from "../TextToSvg";
+import { Coord } from "../utils";
 
 export interface BoxDescription {
     name: string;
     width?: number;
     height?: number;
-    boxStyle?: Partial<CSSStyleDeclaration>;
-    textStyle?: Partial<CSSStyleDeclaration>; // Uses text attributes, and not css props
+    boxStyle?: any;
+    textStyle?: any; // Uses text attributes, and not css props
 }
 
 // A box is a rectanble shape with a name label
@@ -75,12 +76,24 @@ export class Box {
         return this;
     }
 
+    public getRoot() {
+        return this.root;
+    }
+
     public width(): number {
         return Number(this.shapeHolder.width());
     }
 
     public height(): number {
         return Number(this.shapeHolder.height());
+    }
+
+    public getBottomCenter(): Coord {
+        return { x: this.root.cx(), y: this.root.y() + this.root.height() };
+    }
+
+    public getTopCenter(): Coord {
+        return { x: this.root.cx(), y: this.root.y() };
     }
 
     public move(cx: number, cy: number) {

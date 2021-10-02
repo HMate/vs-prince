@@ -37,9 +37,10 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
     g.nodes().forEach(function (v) {
         let node = g.node(v);
         let b = boxes[v];
-        if (b === undefined) {
-            let f = 7;
-        }
         b.move(node.x, node.y);
+    });
+
+    g.edges().forEach(function (edge) {
+        baseBuilder.createEdge(boxes[edge.v], boxes[edge.w]);
     });
 }
