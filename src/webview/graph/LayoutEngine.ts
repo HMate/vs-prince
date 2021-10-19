@@ -24,10 +24,12 @@ export class LayoutEngine {
         Edges should be curved for backward edges. Their trajectory have to be computed. Nodes who are part of the 
         same cycle should be assinged to a group. The backward edges loop around the group.
         */
-        let dependencies = this.gatherDependencies(graph);
+        let dependencies = this.gatherImmediateNeighbours(graph);
+        let cycles = this.gatherCycles(dependencies);
+        this.createLayers(dependencies, cycles);
     }
 
-    private gatherDependencies(graph: Graph): DependencyGraph {
+    private gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
         let dependencyMap: { [parent: string]: Array<string> } = {};
         let dependerMap: { [child: string]: Array<string> } = {};
         for (const node of graph.nodes) {
@@ -41,17 +43,54 @@ export class LayoutEngine {
         return { dependencies: dependencyMap, dependers: dependerMap };
     }
 
-    private createLayers(dependencies: DependencyGraph): Array<Array<string>> {
+    private gatherCycles(relations: ImmediateRelationships) {
+        // Naive: Start DFS from every node, record node path in every step.
+        // If arrived to starting node, save it as cycle.
+        // Optimization: Also detect if arrived in node that is also in the path.
+        // Any node along the path is implicitly searched for all of its cycles,
+        // so they are not needed to be checked later again.
+
+        let visitedNodes: Array<string> = [];
+        let result: CycleRelationships = {};
+        function dfsVisit(currentNode: string, path: Array<string>) {
+            if (path.includes(currentNode)) {
+                // Found cycle
+                let nodeIndex = path.indexOf(currentNode);
+                let cycle = path.slice(nodeIndex);
+                for (const node of cycle) {
+                    if (result[node] === undefined) {
+                        result[node] = [];
+                    }
+                    result[node].push(cycle);
+                }
+            }
+            if (visitedNodes.includes(currentNode)) {
+                return;
+            }
+            visitedNodes.push(currentNode);
+            path.push(currentNode);
+            const dependencies = relations.dependencies[currentNode];
+            for (const dep of dependencies) {
+                dfsVisit(dep, Array.from(path));
+            }
+        }
+        for (const node in Object.keys(relations.dependencies)) {
+            dfsVisit(node, []);
+        }
+        return result;
+    }
+
+    private createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Array<Array<string>> {
         let layers: Array<Array<string>> = [];
-        if (Object.keys(dependencies.dependencies).length === 0) {
+        if (Object.keys(relations.dependencies).length === 0) {
             return layers;
         }
         layers.push([]);
         // have to collect every node who is part of a cycle. We ignore cycle members when assigning layers.
         // build layer 0
-        for (const node in dependencies.dependers) {
-            if (Object.prototype.hasOwnProperty.call(dependencies.dependers, node)) {
-                const parents = dependencies.dependers[node]; // TODO: need only parents who are not in cycle
+        for (const node in relations.dependers) {
+            if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
+                const parents = relations.dependers[node]; // TODO: need only parents who are not in cycle
                 if (parents.length === 0) {
                     layers[0].push(node);
                 }
@@ -65,7 +104,10 @@ export class LayoutEngine {
     }
 }
 
-interface DependencyGraph {
+interface ImmediateRelationships {
     dependencies: { [parent: string]: Array<string> };
     dependers: { [child: string]: Array<string> };
 }
+
+type Cycle = string[];
+type CycleRelationships = { [node: string]: Array<Cycle> };
