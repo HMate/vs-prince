@@ -3,8 +3,38 @@ import dagre from "dagre";
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
 import { Box } from "./baseElements/Box";
+import { Graph } from "./graph/Graph";
+import { LayoutEngine } from "./graph/LayoutEngine";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
+    if (baseBuilder == null) {
+        return;
+    }
+
+    let graph = new Graph();
+
+    // create the boxes, because we need their sizes:
+    let boxes: { [name: string]: Box } = {};
+    for (const node of message.data.nodes) {
+        let b = baseBuilder.createBox({ name: node });
+        boxes[node] = b;
+        graph.addNode({ name: node, width: b.width(), height: b.height() / 2 });
+    }
+
+    for (const node in message.data.edges) {
+        if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
+            const depList = message.data.edges[node];
+            for (const dep of depList) {
+                graph.addEdge({ start: node, end: dep });
+            }
+        }
+    }
+
+    let layout = new LayoutEngine();
+    layout.layoutCyclicTree(graph);
+}
+
+export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
     if (baseBuilder == null) {
         return;
     }
@@ -16,7 +46,6 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
     });
 
     // create the boxes, because we need their sizes:
-    // TODO: Draw edges
     let boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
         let b = baseBuilder.createBox({ name: node });

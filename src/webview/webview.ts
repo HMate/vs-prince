@@ -5,7 +5,7 @@ import "@svgdotjs/svg.draggable.js";
 
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { BaseMessage, DrawDependenciesMessage } from "./extensionMessages";
-import { drawDependencies } from "./DependencyVisualizer";
+import { drawDependencies, drawDependenciesDagre } from "./DependencyVisualizer";
 
 let baseBuilder: BaseVisualizationBuilder;
 
@@ -41,7 +41,8 @@ export function onExtensionMessage(message: BaseMessage) {
         return;
     }
     clearDiagram(baseBuilder);
-    drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+    //drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+    drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
 }
 
 function clearDiagram(baseBuilder: BaseVisualizationBuilder) {

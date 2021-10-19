@@ -33,7 +33,7 @@ export class Box {
         if (description?.width) {
             this.desc.width = description?.width;
         } else {
-            // TODO: Dontsize here ios the same as in webview-style.scss prince-box-name.
+            // TODO: fontSize here is the same as in webview-style.scss prince-box-name.
             let calcWidth = this.tts.getWidth(this.desc.name, { fontSize: 22 }) + 2 * Box.defaultTextMarginWidth;
             this.desc.width = Math.max(calcWidth, Box.defaultMinWidth);
         }
