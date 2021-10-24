@@ -32,11 +32,8 @@
         "compile": "webpack --config ./build/node-extension.webpack.config.js && webpack --config ./build/webview.webpack.config.js",
         "watch": "webpack --watch --config ./build/node-extension.webpack.config.js ./build/webview.webpack.config.js",
         "package": "webpack --mode production --devtool hidden-source-map --config ./build/node-extension.webpack.config.js",
-        "test-compile": "tsc -p ./",
-        "test-watch": "tsc -watch -p ./",
-        "pretest": "npm run test-compile && npm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "test": "ts-mocha src/test/suite/*.test.ts"
     },
     "devDependencies": {
         "@svgdotjs/svg.draggable.js": "^3.0.2",
@@ -68,6 +65,7 @@
         "sass-loader": "^11.0.1",
         "style-loader": "^2.0.0",
         "ts-loader": "^8.0.16",
+        "ts-mocha": "^8.0.0",
         "typescript": "^4.4",
         "typescript-plugin-css-modules": "^3.2.0",
         "url-loader": "^4.1.1",
