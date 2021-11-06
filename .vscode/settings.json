@@ -17,5 +17,8 @@
     },
     "[typescript]": {
         "editor.formatOnSave": true
-    }
+    },
+
+    "mochaExplorer.files": "src/test/suite/*.ts",
+    "mochaExplorer.require": "ts-node/register"
 }

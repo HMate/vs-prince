@@ -2,8 +2,9 @@
     // See http://go.microsoft.com/fwlink/?LinkId=827846
     // for the documentation about the extensions.json format
     "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "amodio.tsl-problem-matcher",
-        "esbenp.prettier-vscode"
+        "dbaeumer.vscode-eslint",         // linting
+        "amodio.tsl-problem-matcher",     // typescript error integation for vscode
+        "esbenp.prettier-vscode",         // prettier,
+        "hbenl.vscode-mocha-test-adapter" // test explorer
     ]
 }
