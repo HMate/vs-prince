@@ -94,34 +94,28 @@ export class OrganizationEngine {
     public static createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Layers {
         let layers: LayersBuilder = new LayersBuilder();
         if (Object.keys(relations.dependencies).length === 0) {
-            return layers;
+            return layers.getLayers();
         }
 
-        let nodesInPrevLayers: Array<NodeId> = [];
-        let nodesInCurrentLayer: Array<NodeId> = [];
-        let layerToBuild = 0;
         let layerWasEmpty = false;
 
         while (!layerWasEmpty) {
             for (const node in relations.dependers) {
-                if (nodesInPrevLayers.includes(node)) {
+                if (layers.isInPrevLayer(node)) {
                     continue;
                 }
                 if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
                     const parents: Array<NodeId> = relations.dependers[node]; // TODO: need only parents who are not in cycle
-                    const everyParentPlaced = parents.every((parent) => nodesInPrevLayers.includes(parent));
+                    const everyParentPlaced = parents.every((parent) => layers.isInPrevLayer(parent));
                     if (everyParentPlaced) {
-                        layers.addToLayer(layerToBuild, node);
-                        nodesInCurrentLayer.push(node);
+                        layers.addToLayer(node);
                     }
                 }
             }
-            layerWasEmpty = nodesInCurrentLayer.length === 0;
-            nodesInPrevLayers.push(...nodesInCurrentLayer);
-            nodesInCurrentLayer = [];
-            layerToBuild += 1;
+            layerWasEmpty = layers.isCurrentLayerEmpty();
+            layers.finishLayer();
         }
-        return layers;
+        return layers.getLayers();
     }
 }
 
@@ -136,11 +130,35 @@ type NodeId = string;
 type Layer = Array<NodeId>;
 type Layers = Array<Layer>;
 
-export class LayersBuilder extends Array<Layer> {
-    public addToLayer(layerIndex: number, node: NodeId) {
-        if (this[layerIndex] == null) {
-            this[layerIndex] = [];
+class LayersBuilder {
+    private layers: Array<Layer> = [];
+    private nodesInPrevLayers: Array<NodeId> = [];
+    private nodesInCurrentLayer: Array<NodeId> = [];
+    private layerToBuild = 0;
+
+    public getLayers() {
+        return this.layers;
+    }
+
+    public isInPrevLayer(node: NodeId): boolean {
+        return this.nodesInPrevLayers.includes(node);
+    }
+
+    public addToLayer(node: NodeId) {
+        if (this.layers[this.layerToBuild] == null) {
+            this.layers[this.layerToBuild] = [];
         }
-        this[layerIndex].push(node);
+        this.layers[this.layerToBuild].push(node);
+        this.nodesInCurrentLayer.push(node);
+    }
+
+    public isCurrentLayerEmpty() {
+        return this.nodesInCurrentLayer.length === 0;
+    }
+
+    public finishLayer() {
+        this.nodesInPrevLayers.push(...this.nodesInCurrentLayer);
+        this.nodesInCurrentLayer = [];
+        this.layerToBuild += 1;
     }
 }
