@@ -91,26 +91,36 @@ export class OrganizationEngine {
         return result;
     }
 
-    public static createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Array<Layer> {
-        let layers: Array<Layer> = [];
+    public static createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Layers {
+        let layers: LayersBuilder = new LayersBuilder();
         if (Object.keys(relations.dependencies).length === 0) {
             return layers;
         }
-        layers.push([]);
-        // have to collect every node who is part of a cycle. We ignore cycle members when assigning layers.
-        // build layer 0
-        for (const node in relations.dependers) {
-            if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
-                const parents = relations.dependers[node]; // TODO: need only parents who are not in cycle
-                if (parents.length === 0) {
-                    layers[0].push(node);
+
+        let nodesInPrevLayers: Array<NodeId> = [];
+        let nodesInCurrentLayer: Array<NodeId> = [];
+        let layerToBuild = 0;
+        let layerWasEmpty = false;
+
+        while (!layerWasEmpty) {
+            for (const node in relations.dependers) {
+                if (nodesInPrevLayers.includes(node)) {
+                    continue;
+                }
+                if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
+                    const parents: Array<NodeId> = relations.dependers[node]; // TODO: need only parents who are not in cycle
+                    const everyParentPlaced = parents.every((parent) => nodesInPrevLayers.includes(parent));
+                    if (everyParentPlaced) {
+                        layers.addToLayer(layerToBuild, node);
+                        nodesInCurrentLayer.push(node);
+                    }
                 }
             }
+            layerWasEmpty = nodesInCurrentLayer.length === 0;
+            nodesInPrevLayers.push(...nodesInCurrentLayer);
+            nodesInCurrentLayer = [];
+            layerToBuild += 1;
         }
-
-        // build other layers
-        // TODO
-
         return layers;
     }
 }
@@ -122,5 +132,15 @@ interface ImmediateRelationships {
 
 type Cycle = Array<NodeId>;
 type CycleRelationships = { [node: NodeId]: Array<Cycle> };
-type Layer = Array<NodeId>;
 type NodeId = string;
+type Layer = Array<NodeId>;
+type Layers = Array<Layer>;
+
+export class LayersBuilder extends Array<Layer> {
+    public addToLayer(layerIndex: number, node: NodeId) {
+        if (this[layerIndex] == null) {
+            this[layerIndex] = [];
+        }
+        this[layerIndex].push(node);
+    }
+}

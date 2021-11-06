@@ -22,4 +22,26 @@ describe("Layout Organization", () => {
             assert.strictEqual(1, layers[1].length);
         });
     });
+    
+    describe("with 3 nodes on 3 layers", () => {
+        let graph = new Graph();
+        graph.addNode({ name: "Aron", width: 30, height: 30 });
+        graph.addNode({ name: "Bill", width: 30, height: 30 });
+        graph.addNode({ name: "Celine", width: 30, height: 30 });
+
+        graph.addEdge({ start: "Aron", end: "Bill" });
+        graph.addEdge({ start: "Bill", end: "Celine" });
+
+        let layers = OrganizationEngine.organize(graph);
+
+        it("should have 3 layers", () => {
+            assert.strictEqual(3, layers.length);
+        });
+
+        it("should have 1 node in each layer", () => {
+            assert.strictEqual(1, layers[0].length);
+            assert.strictEqual(1, layers[1].length);
+            assert.strictEqual(1, layers[2].length);
+        });
+    });
 });
