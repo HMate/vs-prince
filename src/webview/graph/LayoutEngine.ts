@@ -2,8 +2,12 @@ import { Graph } from "./Graph";
 
 export class LayoutEngine {
     public layoutCyclicTree(graph: Graph) {
-        /* Have to:
-        Build dependency graph. Nodes will be placed into layers.
+        /* Layout does 2 steps: Organization and Concretization.
+        Organization consists of placing nodes into layers, without calculating node size, position or edge shape.
+        Concretization will calculate these.
+
+        Organization:
+        First build dependency graph.
         Nodes in layer 0 have no parents, ie no dependers depend on them.
         Nodes in layer 1 depend only on nodes in layer 0. This goes on for every layer.
 
@@ -24,35 +28,40 @@ export class LayoutEngine {
         Edges should be curved for backward edges. Their trajectory have to be computed. Nodes who are part of the 
         same cycle should be assinged to a group. The backward edges loop around the group.
         */
-        let dependencies = this.gatherImmediateNeighbours(graph);
-        let cycles = this.gatherCycles(dependencies);
-        this.createLayers(dependencies, cycles);
+        return OrganizationEngine.organize(graph);
+    }
+}
+
+export class OrganizationEngine {
+    public static organize(graph: Graph) {
+        let dependencies = OrganizationEngine.gatherImmediateNeighbours(graph);
+        let cycles = OrganizationEngine.gatherCycles(dependencies);
+        return OrganizationEngine.createLayers(dependencies, cycles);
     }
 
-    private gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
-        let dependencyMap: { [parent: string]: Array<string> } = {};
-        let dependerMap: { [child: string]: Array<string> } = {};
+    public static gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
+        let rel: ImmediateRelationships = { dependencies: {}, dependers: {} };
         for (const node of graph.nodes) {
-            dependencyMap[node.name] = [];
-            dependerMap[node.name] = [];
+            rel.dependers[node.name] = [];
+            rel.dependencies[node.name] = [];
         }
         for (const edge of graph.edges) {
-            dependencyMap[edge.start].push(edge.end);
-            dependencyMap[edge.end].push(edge.start);
+            rel.dependencies[edge.start].push(edge.end);
+            rel.dependers[edge.end].push(edge.start);
         }
-        return { dependencies: dependencyMap, dependers: dependerMap };
+        return rel;
     }
 
-    private gatherCycles(relations: ImmediateRelationships) {
+    public static gatherCycles(relations: ImmediateRelationships) {
         // Naive: Start DFS from every node, record node path in every step.
         // If arrived to starting node, save it as cycle.
         // Optimization: Also detect if arrived in node that is also in the path.
         // Any node along the path is implicitly searched for all of its cycles,
         // so they are not needed to be checked later again.
 
-        let visitedNodes: Array<string> = [];
+        let visitedNodes: Array<NodeId> = [];
         let result: CycleRelationships = {};
-        function dfsVisit(currentNode: string, path: Array<string>) {
+        function dfsVisit(currentNode: NodeId, path: Array<NodeId>) {
             if (path.includes(currentNode)) {
                 // Found cycle
                 let nodeIndex = path.indexOf(currentNode);
@@ -70,8 +79,10 @@ export class LayoutEngine {
             visitedNodes.push(currentNode);
             path.push(currentNode);
             const dependencies = relations.dependencies[currentNode];
-            for (const dep of dependencies) {
-                dfsVisit(dep, Array.from(path));
+            for (const dep in dependencies) {
+                if (Object.prototype.hasOwnProperty.call(dependencies, dep)) {
+                    dfsVisit(dep, Array.from(path));
+                }
             }
         }
         for (const node in Object.keys(relations.dependencies)) {
@@ -80,8 +91,8 @@ export class LayoutEngine {
         return result;
     }
 
-    private createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Array<Array<string>> {
-        let layers: Array<Array<string>> = [];
+    public static createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Array<Layer> {
+        let layers: Array<Layer> = [];
         if (Object.keys(relations.dependencies).length === 0) {
             return layers;
         }
@@ -105,9 +116,11 @@ export class LayoutEngine {
 }
 
 interface ImmediateRelationships {
-    dependencies: { [parent: string]: Array<string> };
-    dependers: { [child: string]: Array<string> };
+    dependencies: { [parent: NodeId]: Array<NodeId> };
+    dependers: { [child: NodeId]: Array<NodeId> };
 }
 
-type Cycle = string[];
-type CycleRelationships = { [node: string]: Array<Cycle> };
+type Cycle = Array<NodeId>;
+type CycleRelationships = { [node: NodeId]: Array<Cycle> };
+type Layer = Array<NodeId>;
+type NodeId = string;
