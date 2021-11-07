@@ -52,7 +52,7 @@ export class OrganizationEngine {
         return rel;
     }
 
-    public static gatherCycles(relations: ImmediateRelationships) {
+    public static gatherCycles(relations: ImmediateRelationships): CycleStore {
         // Naive: Start DFS from every node, record node path in every step.
         // If arrived to starting node, save it as cycle.
         // Optimization: Also detect if arrived in node that is also in the path.
@@ -60,17 +60,19 @@ export class OrganizationEngine {
         // so they are not needed to be checked later again.
 
         let visitedNodes: Array<NodeId> = [];
-        let result: CycleRelationships = {};
+        let result = new CycleStore();
         function dfsVisit(currentNode: NodeId, path: Array<NodeId>) {
             if (path.includes(currentNode)) {
                 // Found cycle
                 let nodeIndex = path.indexOf(currentNode);
                 let cycle = path.slice(nodeIndex);
                 for (const node of cycle) {
-                    if (result[node] === undefined) {
-                        result[node] = [];
+                    let nodeCycles = result.getCycleData(node);
+                    nodeCycles.paths.push(cycle);
+                    for (const member of cycle) {
+                        nodeCycles.nodes.add(member);
                     }
-                    result[node].push(cycle);
+                    result.setCycleData(node, nodeCycles);
                 }
             }
             if (visitedNodes.includes(currentNode)) {
@@ -79,19 +81,19 @@ export class OrganizationEngine {
             visitedNodes.push(currentNode);
             path.push(currentNode);
             const dependencies = relations.dependencies[currentNode];
-            for (const dep in dependencies) {
-                if (Object.prototype.hasOwnProperty.call(dependencies, dep)) {
-                    dfsVisit(dep, Array.from(path));
-                }
+            for (const dep of dependencies) {
+                dfsVisit(dep, Array.from(path));
             }
         }
-        for (const node in Object.keys(relations.dependencies)) {
-            dfsVisit(node, []);
+        for (const node in relations.dependencies) {
+            if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
+                dfsVisit(node, []);
+            }
         }
         return result;
     }
 
-    public static createLayers(relations: ImmediateRelationships, cycles: CycleRelationships): Layers {
+    public static createLayers(relations: ImmediateRelationships, cycles: CycleStore): Layers {
         let layers: LayersBuilder = new LayersBuilder();
         if (Object.keys(relations.dependencies).length === 0) {
             return layers.getLayers();
@@ -105,8 +107,12 @@ export class OrganizationEngine {
                     continue;
                 }
                 if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
-                    const parents: Array<NodeId> = relations.dependers[node]; // TODO: need only parents who are not in cycle
-                    const everyParentPlaced = parents.every((parent) => layers.isInPrevLayer(parent));
+                    // Place node on layer when parents are either not in cycle or already placed
+                    const parents: Array<NodeId> = relations.dependers[node];
+                    let nodeCycles: CycleData = cycles.getCycleData(node);
+                    const everyParentPlaced = parents.every(
+                        (parent) => layers.isInPrevLayer(parent) || nodeCycles.nodes.has(parent)
+                    );
                     if (everyParentPlaced) {
                         layers.addToLayer(node);
                     }
@@ -125,10 +131,31 @@ interface ImmediateRelationships {
 }
 
 type Cycle = Array<NodeId>;
-type CycleRelationships = { [node: NodeId]: Array<Cycle> };
+type CycleData = { paths: Array<Cycle>; nodes: Set<NodeId> };
+type CycleRelationships = { [node: NodeId]: CycleData };
 type NodeId = string;
 type Layer = Array<NodeId>;
 type Layers = Array<Layer>;
+
+class CycleStore {
+    private cycles: CycleRelationships = {};
+
+    public setCycleData(node: NodeId, nodeCycles: CycleData) {
+        this.cycles[node] = nodeCycles;
+    }
+
+    public getCycleData(node: NodeId) {
+        let nodeCycles = this.cycles[node];
+        if (nodeCycles == null) {
+            return this.createEmptyCycleData();
+        }
+        return nodeCycles;
+    }
+
+    public createEmptyCycleData(): CycleData {
+        return { paths: [], nodes: new Set() };
+    }
+}
 
 class LayersBuilder {
     private layers: Array<Layer> = [];
