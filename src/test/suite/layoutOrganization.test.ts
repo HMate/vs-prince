@@ -1,4 +1,3 @@
-import * as assert from "assert";
 import { expect } from "chai";
 
 import { Graph } from "../../webview/graph/Graph";
@@ -119,11 +118,6 @@ describe("Layout Organization", () => {
         it("should have 7 layers", () => {
             expect(layers).to.have.length(7);
         });
-
-        it("should have 3 root nodes", () => {
-            assert.strictEqual(3, layers[0].length);
-        });
-
         it("should have layers with correct node count", () => {
             expect(layers[0]).to.have.length(3);
             expect(layers[1]).to.have.length(7);

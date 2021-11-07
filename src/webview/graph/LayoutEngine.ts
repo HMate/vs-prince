@@ -110,9 +110,17 @@ export class OrganizationEngine {
                     // Place node on layer when parents are either not in cycle or already placed
                     const parents: Array<NodeId> = relations.dependers[node];
                     let nodeCycles: CycleData = cycles.getCycleData(node);
-                    const everyParentPlaced = parents.every(
-                        (parent) => layers.isInPrevLayer(parent) || nodeCycles.nodes.has(parent)
+                    let nobodyIsPlacedFromCycles = [...nodeCycles.nodes.values()].every(
+                        (member) => !layers.isInAnyLayer(member)
                     );
+                    let everyParentPlaced: boolean;
+                    if (nobodyIsPlacedFromCycles) {
+                        everyParentPlaced = parents.every(
+                            (parent) => layers.isInPrevLayer(parent) || nodeCycles.nodes.has(parent)
+                        );
+                    } else {
+                        everyParentPlaced = parents.every((parent) => layers.isInPrevLayer(parent));
+                    }
                     if (everyParentPlaced) {
                         layers.addToLayer(node);
                     }
@@ -169,6 +177,14 @@ class LayersBuilder {
 
     public isInPrevLayer(node: NodeId): boolean {
         return this.nodesInPrevLayers.includes(node);
+    }
+
+    public isInCurrentLayer(node: NodeId): boolean {
+        return this.nodesInCurrentLayer.includes(node);
+    }
+
+    public isInAnyLayer(node: NodeId): boolean {
+        return this.isInPrevLayer(node) || this.isInCurrentLayer(node);
     }
 
     public addToLayer(node: NodeId) {
