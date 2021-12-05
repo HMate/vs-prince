@@ -1,10 +1,12 @@
+import { assert } from "console";
 import { Graph } from "./Graph";
 
 export class LayoutEngine {
     public layoutCyclicTree(graph: Graph) {
         /* Layout does 2 steps: Organization and Concretization.
-        Organization consists of placing nodes into layers, without calculating node size, position or edge shape.
-        Concretization will calculate these.
+        Organization consists of placing nodes into logical positions.
+        For cyclic tree this means organize into layers, without calculating node size, position or edge shape.
+        Concretization will calculate the concrete postions with size and positions.
 
         Organization:
         First build dependency graph.
@@ -33,12 +35,14 @@ export class LayoutEngine {
 }
 
 export class OrganizationEngine {
+    /** Logical positions calculation for cyclic tree graphs */
     public static organize(graph: Graph) {
         let dependencies = OrganizationEngine.gatherImmediateNeighbours(graph);
         let cycles = OrganizationEngine.gatherCycles(dependencies);
         return OrganizationEngine.createLayers(dependencies, cycles);
     }
 
+    /** Make double-linked list of nodes, to easy to search for cycles, layers */
     public static gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
         let rel: ImmediateRelationships = { dependencies: {}, dependers: {} };
         for (const node of graph.nodes) {
@@ -67,12 +71,12 @@ export class OrganizationEngine {
                 let nodeIndex = path.indexOf(currentNode);
                 let cycle = path.slice(nodeIndex);
                 for (const node of cycle) {
-                    let nodeCycles = result.getCycleData(node);
+                    let nodeCycles = result.getNodeCycles(node);
                     nodeCycles.paths.push(cycle);
                     for (const member of cycle) {
                         nodeCycles.nodes.add(member);
                     }
-                    result.setCycleData(node, nodeCycles);
+                    result.setNodeCycles(nodeCycles);
                 }
             }
             if (visitedNodes.includes(currentNode)) {
@@ -96,6 +100,7 @@ export class OrganizationEngine {
     public static createLayers(relations: ImmediateRelationships, cycles: CycleStore): Layers {
         let layers: LayersBuilder = new LayersBuilder();
         if (Object.keys(relations.dependencies).length === 0) {
+            // TODO: Shouldnt this place everybody in the same layer?
             return layers.getLayers();
         }
 
@@ -109,18 +114,12 @@ export class OrganizationEngine {
                 if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
                     // Place node on layer when parents are either not in cycle or already placed
                     const parents: Array<NodeId> = relations.dependers[node];
-                    let nodeCycles: CycleData = cycles.getCycleData(node);
-                    let nobodyIsPlacedFromCycles = [...nodeCycles.nodes.values()].every(
-                        (member) => !layers.isInAnyLayer(member)
-                    );
-                    let everyParentPlaced: boolean;
-                    if (nobodyIsPlacedFromCycles) {
-                        everyParentPlaced = parents.every(
-                            (parent) => layers.isInPrevLayer(parent) || nodeCycles.nodes.has(parent)
-                        );
-                    } else {
-                        everyParentPlaced = parents.every((parent) => layers.isInPrevLayer(parent));
-                    }
+                    const nodeCycles: NodeCycles = cycles.getNodeCycles(node);
+                    const cycleParents = new Set(nodeCycles.getParentsInCycles());
+                    const nonCycleParents = parents.filter((parent) => !cycleParents.has(parent));
+                    const parentsNeededInCycle = new Set(nodeCycles.getParentsNeededInCycles());
+                    const relevantParents = [...nonCycleParents, ...parentsNeededInCycle];
+                    const everyParentPlaced = relevantParents.every((parent) => layers.isInPrevLayer(parent));
                     if (everyParentPlaced) {
                         layers.addToLayer(node);
                     }
@@ -137,10 +136,6 @@ interface ImmediateRelationships {
     dependencies: { [parent: NodeId]: Array<NodeId> };
     dependers: { [child: NodeId]: Array<NodeId> };
 }
-
-type Cycle = Array<NodeId>;
-type CycleData = { paths: Array<Cycle>; nodes: Set<NodeId> };
-type CycleRelationships = { [node: NodeId]: CycleData };
 type NodeId = string;
 type Layer = Array<NodeId>;
 type Layers = Array<Layer>;
@@ -148,22 +143,61 @@ type Layers = Array<Layer>;
 class CycleStore {
     private cycles: CycleRelationships = {};
 
-    public setCycleData(node: NodeId, nodeCycles: CycleData) {
-        this.cycles[node] = nodeCycles;
+    public setNodeCycles(nodeCycles: NodeCycles) {
+        this.cycles[nodeCycles.node] = nodeCycles;
     }
 
-    public getCycleData(node: NodeId) {
+    public getNodeCycles(node: NodeId) {
         let nodeCycles = this.cycles[node];
         if (nodeCycles == null) {
-            return this.createEmptyCycleData();
+            return new NodeCycles(node);
         }
         return nodeCycles;
     }
+}
 
-    public createEmptyCycleData(): CycleData {
-        return { paths: [], nodes: new Set() };
+type CycleRelationships = { [node: NodeId]: NodeCycles };
+
+class NodeCycles {
+    public paths: Array<Cycle> = [];
+    public nodes: Set<NodeId> = new Set();
+
+    constructor(readonly node: NodeId) {}
+
+    /** Gives back nodes that are needed to be placed before this node, and they are in a common cycle.
+     * Nodes in cycles are placed in the order they were discovered. Return the immediate discovered parent.
+     * This gives an intuitive way to order nodes in a cycle.
+     */
+    public getParentsNeededInCycles(this: NodeCycles): Array<NodeId> {
+        let parents: Array<NodeId> = [];
+        for (const cycle of this.paths) {
+            const index = cycle.indexOf(this.node);
+            assert(index > -1, `Node is missing from a cycles it was assigned! ${this.node} <- ${cycle}`);
+            if (index - 1 >= 0) {
+                parents.push(cycle[index - 1]);
+            }
+        }
+        return parents;
+    }
+
+    public getParentsInCycles(this: NodeCycles): Array<NodeId> {
+        // TODO: This could be optimized to computed together with getParentsNeededInCycles.
+        // These can be computed once, when nodeCycles are finished gathering.
+        let parents: Array<NodeId> = [];
+        for (const cycle of this.paths) {
+            const index = cycle.indexOf(this.node);
+            assert(index > -1, `Node is missing from a cycles it was assigned! ${this.node} <- ${cycle}`);
+            if (index - 1 >= 0) {
+                parents.push(cycle[index - 1]);
+            } else {
+                parents.push(cycle[cycle.length - 1]);
+            }
+        }
+        return parents;
     }
 }
+
+type Cycle = Array<NodeId>;
 
 class LayersBuilder {
     private layers: Array<Layer> = [];
@@ -199,6 +233,7 @@ class LayersBuilder {
         return this.nodesInCurrentLayer.length === 0;
     }
 
+    /** Updates node-layer association cache, advances to next layer to build*/
     public finishLayer() {
         this.nodesInPrevLayers.push(...this.nodesInCurrentLayer);
         this.nodesInCurrentLayer = [];
