@@ -86,8 +86,69 @@ describe("Layout Organization with cycles", () => {
         });
     });
 
-    // TODO: 5. Test for node contained in multiple (2,3,...) cycles
-    // TODO: 6. Test for branch inside the cycle
+    describe("5. Test for node contained in 2 cycles", () => {
+        let graph = new Graph();
+        addNodes(graph, "Aron", "Bill", "Celine", "Dylan", "Erza");
+
+        addCycle(graph, "Aron", "Celine", "Bill");
+        addCycle(graph, "Dylan", "Celine", "Erza");
+
+        let layers = OrganizationEngine.organize(graph);
+
+        it("should have 4 layers", () => {
+            expect(layers).to.have.length(4);
+        });
+
+        it("should have the following layers", () => {
+            expect(layers[0]).to.have.members(["Aron"]);
+            expect(layers[1]).to.have.members(["Celine"]);
+            expect(layers[2]).to.have.members(["Bill", "Erza"]);
+            expect(layers[3]).to.have.members(["Dylan"]);
+        });
+    });
+
+    describe("6. Test for node contained in 3 cycles", () => {
+        let graph = new Graph();
+        addNodes(graph, "Aron", "Bill", "Celine", "Dylan", "Erza", "Fidgerald");
+
+        addCycle(graph, "Aron", "Bill", "Celine");
+        addCycle(graph, "Bill", "Dylan", "Erza");
+        addCycle(graph, "Fidgerald", "Bill");
+
+        let layers = OrganizationEngine.organize(graph);
+
+        it("should have 4 layers", () => {
+            expect(layers).to.have.length(4);
+        });
+
+        it("should have the following layers", () => {
+            expect(layers[0]).to.have.members(["Aron"]);
+            expect(layers[1]).to.have.members(["Bill"]);
+            expect(layers[2]).to.have.members(["Celine", "Fidgerald", "Dylan"]);
+            expect(layers[3]).to.have.members(["Erza"]);
+        });
+    });
+
+    describe("7. Test for branch inside the cycle", () => {
+        let graph = new Graph();
+        addNodes(graph, "Aron", "Bill", "Celine");
+
+        addCycle(graph, "Aron", "Bill");
+        graph.addEdge({ start: "Aron", end: "Celine" });
+        graph.addEdge({ start: "Celine", end: "Bill" });
+
+        let layers = OrganizationEngine.organize(graph);
+
+        it("should have 3 layers", () => {
+            expect(layers).to.have.length(3);
+        });
+
+        it("should have the following layers", () => {
+            expect(layers[0]).to.have.members(["Aron"]);
+            expect(layers[1]).to.have.members(["Celine"]);
+            expect(layers[2]).to.have.members(["Bill"]);
+        });
+    });
 });
 
 function addNodes(graph: Graph, ...nodes: string[]) {
