@@ -10,7 +10,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
 /**@type {import('webpack').Configuration}*/
 const config = {
-    target: "electron-renderer",
+    target: "web",
     mode: "none", // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
 
     devtool: "source-map",
@@ -19,7 +19,10 @@ const config = {
         // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
         path: path.resolve(__dirname, "..", "media"),
         filename: "webview.js",
-        libraryTarget: "window",
+        library: {
+            name: "webviewPrince",
+            type: "window",
+        },
         publicPath: "",
     },
     resolve: {
