@@ -96,17 +96,15 @@ export class OrganizationEngine {
                 dfsVisit(dep, Array.from(path));
             }
         }
-        for (const node in relations.dependencies) {
-            if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
-                dfsVisit(node, []);
-            }
+        for (const node of relations.dependencies.keys()) {
+            dfsVisit(node, []);
         }
         return result;
     }
 
     public static createLayers(relations: ImmediateRelationships, cycles: CycleStore): OrganizationalLayers {
         let layers: LayersBuilder = new LayersBuilder();
-        if (Object.keys(relations.dependencies).length === 0) {
+        if (relations.dependencies.size === 0) {
             // TODO: Shouldnt this place everybody in the same layer?
             return layers.getLayers();
         }
@@ -114,22 +112,21 @@ export class OrganizationEngine {
         let layerWasEmpty = false;
 
         while (!layerWasEmpty) {
-            for (const node in relations.dependers) {
+            for (const node of relations.dependers.keys()) {
                 if (layers.isInPrevLayer(node)) {
                     continue;
                 }
-                if (Object.prototype.hasOwnProperty.call(relations.dependers, node)) {
-                    // Place node on layer when parents are either not in cycle or already placed
-                    const parents: Array<NodeId> = relations.dependers.get(node)!;
-                    const nodeCycles: NodeCycles = cycles.getNodeCycles(node);
-                    const cycleParents = new Set(nodeCycles.getParentsInCycles());
-                    const nonCycleParents = parents.filter((parent) => !cycleParents.has(parent));
-                    const parentsNeededInCycle = new Set(nodeCycles.getParentsNeededInCycles());
-                    const relevantParents = [...nonCycleParents, ...parentsNeededInCycle];
-                    const everyParentPlaced = relevantParents.every((parent) => layers.isInPrevLayer(parent));
-                    if (everyParentPlaced) {
-                        layers.addToLayer(node);
-                    }
+
+                // Place node on layer when parents are either not in cycle or already placed
+                const parents: Array<NodeId> = relations.dependers.get(node)!;
+                const nodeCycles: NodeCycles = cycles.getNodeCycles(node);
+                const cycleParents = new Set(nodeCycles.getParentsInCycles());
+                const nonCycleParents = parents.filter((parent) => !cycleParents.has(parent));
+                const parentsNeededInCycle = new Set(nodeCycles.getParentsNeededInCycles());
+                const relevantParents = [...nonCycleParents, ...parentsNeededInCycle];
+                const everyParentPlaced = relevantParents.every((parent) => layers.isInPrevLayer(parent));
+                if (everyParentPlaced) {
+                    layers.addToLayer(node);
                 }
             }
             layerWasEmpty = layers.isCurrentLayerEmpty();
