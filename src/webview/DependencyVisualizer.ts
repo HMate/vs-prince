@@ -3,8 +3,8 @@ import dagre from "dagre";
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
 import { Box } from "./baseElements/Box";
-import { Graph } from "./graph/Graph";
-import { LayoutEngine } from "./graph/LayoutEngine";
+import { Graph, NodeId } from "./graph/Graph";
+import { LayoutEngine, EdgeId } from "./graph/LayoutEngine";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
     if (baseBuilder == null) {
@@ -14,7 +14,7 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
     let graph = new Graph();
 
     // create the boxes, because we need their sizes:
-    let boxes: { [name: string]: Box } = {};
+    let boxes: { [name: NodeId]: Box } = {};
     for (const node of message.data.nodes) {
         let b = baseBuilder.createBox({ name: node });
         boxes[node] = b;
@@ -31,7 +31,19 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
     }
 
     let layout = new LayoutEngine();
-    layout.layoutCyclicTree(graph);
+    const positions = layout.layoutCyclicTree(graph);
+    positions.nodes().forEach((nodeId: NodeId) => {
+        let node = positions.nodePos(nodeId);
+        let b = boxes[nodeId];
+        b.move(node?.cx ?? 0, node?.cy ?? 0);
+    });
+
+    positions.edges().forEach((edge: EdgeId) => {
+        let pos = positions.edgePos(edge);
+        if (pos) {
+            baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
+        }
+    });
 }
 
 export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {

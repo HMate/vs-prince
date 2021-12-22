@@ -1,8 +1,5 @@
 export type SvgInHtml = HTMLElement & SVGSVGElement;
 
-export type Coord = { x: number; y: number };
-export type Point = [number, number];
-
 /** Creates list with range of numbers. */
 export function range(to: number): Array<number>;
 export function range(from: number, to: number): Array<number>;
@@ -18,6 +15,9 @@ export function range(from: number, to?: number): Array<number> {
     }
     return [...Array(size).keys()].map((val) => from + sign * val);
 }
+
+export type Coord = { x: number; y: number };
+export type Point = [number, number];
 
 export function addPoint(p0: Point, p1: Point): Point {
     return [p0[0] + p1[0], p0[1] + p1[1]];

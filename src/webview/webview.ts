@@ -41,8 +41,8 @@ export function onExtensionMessage(message: BaseMessage) {
         return;
     }
     clearDiagram(baseBuilder);
-    //drawDependencies(baseBuilder, message as DrawDependenciesMessage);
-    drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
+    drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+    //drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
 }
 
 function clearDiagram(baseBuilder: BaseVisualizationBuilder) {

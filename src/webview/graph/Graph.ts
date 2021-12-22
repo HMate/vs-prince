@@ -1,12 +1,14 @@
+export type NodeId = string;
+
 export interface GraphNode {
-    name: string;
+    name: NodeId;
     width: number;
     height: number;
 }
 
 export interface GraphEdge {
-    start: string;
-    end: string;
+    start: NodeId;
+    end: NodeId;
 }
 
 export class Graph {
@@ -19,6 +21,14 @@ export class Graph {
 
     public addEdge(edge: GraphEdge) {
         this.edgeList.push(edge);
+    }
+
+    public node(nid: NodeId): GraphNode | undefined {
+        return this.nodes.find((elem: GraphNode) => elem.name === nid);
+    }
+
+    public edge(start: NodeId, end: NodeId): GraphEdge | undefined {
+        return this.edges.find((elem: GraphEdge) => elem.start === start && elem.end === end);
     }
 
     public get nodes(): Array<GraphNode> {
