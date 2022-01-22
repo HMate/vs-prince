@@ -278,6 +278,11 @@ export class ConcretizationEngine {
 
             curPos = addCoord(curPos, { x: 0.0, y: layerMaxHeight / 2.0 + nodeYMargin });
         }
+
+        for (const edge of graph.edges) {
+            positions.addEdge(edge);
+        }
+
         return positions;
     }
 
