@@ -26,8 +26,8 @@ describe("Test full dependecy layout", () => {
 
         let layout = new LayoutEngine();
         let positions: ConcreteGraphPositions = layout.layoutCyclicTree(graph);
-        it("should work", () => {
-            expect(positions?.nodes()).to.have.length(51);
+        it("should have same number of positions as nodes", () => {
+            expect(positions?.nodes()).to.have.length(deps.nodes.length);
         });
     });
 });
