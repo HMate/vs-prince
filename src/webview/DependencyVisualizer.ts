@@ -3,8 +3,8 @@ import dagre from "dagre";
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
 import { Box } from "./baseElements/Box";
-import { Graph, NodeId } from "./graph/Graph";
-import { LayoutEngine, EdgeId } from "./graph/LayoutEngine";
+import { Graph, NodeId, EdgeId } from "./graph/Graph";
+import { LayoutEngine } from "./graph/LayoutEngine";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
     if (baseBuilder == null) {

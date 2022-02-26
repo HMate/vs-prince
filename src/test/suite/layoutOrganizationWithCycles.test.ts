@@ -2,7 +2,7 @@ import { expect } from "chai";
 
 import { range } from "../../webview/utils";
 import { Graph } from "../../webview/graph/Graph";
-import { LayoutEngine, OrganizationEngine } from "../../webview/graph/LayoutEngine";
+import { OrganizationEngine } from "../../webview/graph/cyclicTree/OrganizationEngine";
 
 describe("Layout Organization with cycles", () => {
     describe("1. when single node depends on itself", () => {

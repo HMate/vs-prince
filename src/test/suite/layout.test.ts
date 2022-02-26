@@ -1,8 +1,8 @@
 import { expect } from "chai";
 
 import { PrinceClient } from "../../PrinceClient";
-import { Graph } from "../../webview/graph/Graph";
-import { LayoutEngine, ConcreteGraphPositions } from "../../webview/graph/LayoutEngine";
+import { Graph, ConcreteGraph } from "../../webview/graph/Graph";
+import { LayoutEngine } from "../../webview/graph/LayoutEngine";
 
 describe("Test full dependecy layout", () => {
     describe("on parsed python dependencies", () => {
@@ -25,7 +25,7 @@ describe("Test full dependecy layout", () => {
         }
 
         let layout = new LayoutEngine();
-        let positions: ConcreteGraphPositions = layout.layoutCyclicTree(graph);
+        let positions: ConcreteGraph = layout.layoutCyclicTree(graph);
         it("should have same number of positions as nodes", () => {
             expect(positions?.nodes()).to.have.length(deps.nodes.length);
         });

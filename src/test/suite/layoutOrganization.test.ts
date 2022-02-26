@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import { Graph } from "../../webview/graph/Graph";
-import { LayoutEngine, OrganizationEngine } from "../../webview/graph/LayoutEngine";
+import { OrganizationEngine } from "../../webview/graph/cyclicTree/OrganizationEngine";
 
 describe("Layout Organization", () => {
     describe("with single node", () => {

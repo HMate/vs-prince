@@ -10,6 +10,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     let disposable = vscode.commands.registerCommand("vs-prince.visualize", () => {
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
+
+        // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.
         if (cachedPanel == null) {
             let workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
             cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
