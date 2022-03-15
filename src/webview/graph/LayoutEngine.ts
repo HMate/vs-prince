@@ -30,10 +30,24 @@ export class LayoutEngine {
         current layer. The position is based on the position of the parent, and the count of siblings.
 
         Edges should be curved for backward edges. Their trajectory have to be computed. Nodes who are part of the 
-        same cycle should be assinged to a group. The backward edges loop around the group.
+        same cycle should be assinged to a group. The backward edges loop around the group.        
         */
         let organization = OrganizationEngine.organize(graph);
         let positions = ConcretizationEngine.concretize(graph, organization);
         return positions;
+    }
+
+    
+    public layoutGroupedCyclicTree(graph: Graph) {
+        /* Finding groups.
+        If a node has a single parent, they are in the same group.
+        If a node has multiple parents that are in the same group, the node is in the group too.
+        If a node has multiple parents, and there are any that with different groups, then the node is in a 3rd group.
+        Create subgroups? - If two nodes depend on each other, they could be moved to the same group, but in different subgroups?
+
+        Inside groups layout nodes as in layoutCyclicTree.
+        Inside groups edges are straight, or splines to avoid nodes.
+        Between groups, edges from same source group are fitted together and run in parallel to target group.
+         */
     }
 }

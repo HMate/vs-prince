@@ -6,8 +6,8 @@ import { Box } from "./Box";
 export class Edge {
     private path: Path;
     private head: Marker | undefined;
-    static readonly headLength = 8;
-    static readonly headWidth = 12;
+    static readonly headLength = 6;
+    static readonly headWidth = 8;
     constructor(private readonly builder: BaseVisualizationBuilder, private start: Box, private end: Box) {
         this.registerDef();
         this.path = this.builder.root.path();
