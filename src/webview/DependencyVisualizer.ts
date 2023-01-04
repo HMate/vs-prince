@@ -4,7 +4,7 @@ import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
 import { Box } from "./baseElements/Box";
 import { Graph, NodeId, EdgeId } from "./graph/Graph";
-import { LayoutEngine } from "./graph/LayoutEngine";
+import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
     if (baseBuilder == null) {
@@ -30,7 +30,7 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
         }
     }
 
-    let layout = new LayoutEngine();
+    let layout = new GraphLayoutEngine();
     const positions = layout.layoutCyclicTree(graph);
     positions.nodes().forEach((nodeId: NodeId) => {
         let node = positions.nodePos(nodeId);
