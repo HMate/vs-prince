@@ -8,7 +8,7 @@ export function activate(context: vscode.ExtensionContext) {
     let logChannel = vscode.window.createOutputChannel("VSPrince");
     logChannel.appendLine("Command vs-prince activated");
 
-    let disposable = vscode.commands.registerCommand("vs-prince.visualize", () => {
+    let disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
 
         // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.

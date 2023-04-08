@@ -9,20 +9,17 @@
     "categories": [
         "Other"
     ],
-    "activationEvents": [
-        "onCommand:vs-prince.visualize"
-    ],
     "main": "./dist/extension.js",
     "contributes": {
         "commands": [
             {
-                "command": "vs-prince.visualize",
-                "title": "Visualizer script"
+                "command": "vs-prince.visualize-py-deps",
+                "title": "VS-Prince: Visualize python dependencies"
             }
         ],
         "keybindings": [
             {
-                "command": "vs-prince.visualize",
+                "command": "vs-prince.visualize-py-deps",
                 "key": "ctrl+d"
             }
         ]
