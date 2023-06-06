@@ -5,7 +5,7 @@
     "tasks": [
         {
             "type": "npm",
-            "script": "watch",
+            "script": "nodemon",
             "problemMatcher": ["$ts-webpack-watch", "$tslint-webpack-watch"],
             "isBackground": true,
             "presentation": {

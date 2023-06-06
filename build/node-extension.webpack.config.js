@@ -3,6 +3,14 @@
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
+class WatchTimerPlugin {
+    apply(compiler) {
+        compiler.hooks.done.tap("Watch Timer Plugin", (stats) => {
+            console.log("\n[" + new Date().toLocaleString() + "]" + " --- Extension done.\n");
+        });
+    }
+}
+
 /**@type {import('webpack').Configuration}*/
 const config = {
     target: "node", // vscode extensions run in a Node.js-context 📖 -> https://webpack.js.org/configuration/node/
@@ -36,6 +44,6 @@ const config = {
             },
         ],
     },
-    plugins: [new CleanWebpackPlugin()],
+    plugins: [new CleanWebpackPlugin(), new WatchTimerPlugin()],
 };
 module.exports = config;

@@ -6,6 +6,14 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 
+class WatchTimerPlugin {
+    apply(compiler) {
+        compiler.hooks.done.tap("Watch Timer Plugin", (stats) => {
+            console.log("\n[" + new Date().toLocaleString() + "]" + " --- Webview done.\n");
+        });
+    }
+}
+
 /**@type {import('webpack').Configuration}*/
 const config = {
     target: "web",
@@ -73,6 +81,7 @@ const config = {
         }),
         new CleanWebpackPlugin(),
         new MiniCssExtractPlugin({ filename: "webview-style.css" }),
+        new WatchTimerPlugin(),
     ],
 };
 module.exports = config;

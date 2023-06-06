@@ -1,0 +1,18 @@
+{
+    "watch": [
+        "src",
+        "build",
+        "package.json",
+        "tsconfig.json"
+    ],
+    "ignore": [
+        ".git",
+        ".vscode-test",
+        "node_modules",
+        "dist",
+        "media",
+        "docs"
+    ],
+    "verbose": true,
+    "ext": "js json ts scss css html"
+}
