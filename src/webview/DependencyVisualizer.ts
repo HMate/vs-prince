@@ -6,17 +6,17 @@ import { Box } from "./baseElements/Box";
 import { Graph, NodeId, EdgeId } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 
-export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
+export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
     if (baseBuilder == null) {
         return;
     }
 
-    let graph = new Graph();
+    const graph = new Graph();
 
     // create the boxes, because we need their sizes:
-    let boxes: { [name: NodeId]: Box } = {};
+    const boxes: { [name: NodeId]: Box } = {};
     for (const node of message.data.nodes) {
-        let b = baseBuilder.createBox({ name: node });
+        const b = baseBuilder.createBox({ name: node });
         boxes[node] = b;
         graph.addNode({ name: node, width: b.width(), height: b.height() / 2 });
     }
@@ -30,37 +30,37 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
         }
     }
 
-    let layout = new GraphLayoutEngine();
+    const layout = new GraphLayoutEngine();
     const positions = layout.layoutCyclicTree(graph);
     positions.nodes().forEach((nodeId: NodeId) => {
-        let node = positions.nodePos(nodeId);
-        let b = boxes[nodeId];
+        const node = positions.nodePos(nodeId);
+        const b = boxes[nodeId];
         b.move(node?.cx ?? 0, node?.cy ?? 0);
     });
 
     positions.edges().forEach((edge: EdgeId) => {
-        let pos = positions.edgePos(edge);
+        const pos = positions.edgePos(edge);
         if (pos) {
             baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
         }
     });
 }
 
-export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage) {
+export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
     if (baseBuilder == null) {
         return;
     }
 
-    var g = new dagre.graphlib.Graph();
+    const g = new dagre.graphlib.Graph();
     g.setGraph({});
     g.setDefaultEdgeLabel(function () {
         return {};
     });
 
     // create the boxes, because we need their sizes
-    let boxes: { [name: string]: Box } = {};
+    const boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
-        let b = baseBuilder.createBox({ name: node });
+        const b = baseBuilder.createBox({ name: node });
         boxes[node] = b;
         g.setNode(node, { label: node, width: b.width(), height: b.height() / 2 });
     }
@@ -76,8 +76,8 @@ export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, mes
 
     dagre.layout(g);
     g.nodes().forEach(function (v) {
-        let node = g.node(v);
-        let b = boxes[v];
+        const node = g.node(v);
+        const b = boxes[v];
         b.move(node.x, node.y);
     });
 

@@ -2,15 +2,15 @@ import { Graph, NodeId } from "../Graph";
 
 export class OrganizationEngine {
     /** Logical positions calculation for cyclic tree graphs */
-    public static organize(graph: Graph) {
-        let dependencies = OrganizationEngine.gatherImmediateNeighbours(graph);
-        let cycles = OrganizationEngine.gatherCycles(dependencies);
+    public static organize(graph: Graph): OrganizationalLayers {
+        const dependencies = OrganizationEngine.gatherImmediateNeighbours(graph);
+        const cycles = OrganizationEngine.gatherCycles(dependencies);
         return OrganizationEngine.createLayers(dependencies, cycles);
     }
 
     /** Make double-linked list of nodes, to ease search for cycles, layers */
     public static gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
-        let rel: ImmediateRelationships = { dependencies: new Map(), dependers: new Map() };
+        const rel: ImmediateRelationships = { dependencies: new Map(), dependers: new Map() };
         for (const node of graph.nodes) {
             if (rel.dependers.has(node.name)) {
                 console.warn(`Found duplicated nodeId: ${node.name}`);
@@ -33,15 +33,15 @@ export class OrganizationEngine {
         // Any node along the path is implicitly searched for all of its cycles,
         // so they are not needed to be checked later again.
 
-        let visitedNodes: Array<NodeId> = [];
-        let result = new CycleStore();
+        const visitedNodes: Array<NodeId> = [];
+        const result = new CycleStore();
         function dfsVisit(currentNode: NodeId, path: Array<NodeId>) {
             if (path.includes(currentNode)) {
                 // Found cycle
-                let nodeIndex = path.indexOf(currentNode);
-                let cycle = path.slice(nodeIndex);
+                const nodeIndex = path.indexOf(currentNode);
+                const cycle = path.slice(nodeIndex);
                 for (const node of cycle) {
-                    let nodeCycles = result.getNodeCycles(node);
+                    const nodeCycles = result.getNodeCycles(node);
                     nodeCycles.paths.push(cycle);
                     for (const member of cycle) {
                         nodeCycles.nodes.add(member);
@@ -66,7 +66,7 @@ export class OrganizationEngine {
     }
 
     public static createLayers(relations: ImmediateRelationships, cycles: CycleStore): OrganizationalLayers {
-        let layers: LayersBuilder = new LayersBuilder();
+        const layers: LayersBuilder = new LayersBuilder();
         if (relations.dependencies.size === 0) {
             // TODO: Shouldnt this place everybody in the same layer?
             return layers.getLayers();
@@ -112,7 +112,7 @@ class CycleStore {
     }
 
     public getNodeCycles(node: NodeId) {
-        let nodeCycles = this.cycles[node];
+        const nodeCycles = this.cycles[node];
         if (nodeCycles == null) {
             return new NodeCycles(node);
         }
@@ -136,7 +136,7 @@ class NodeCycles {
      * This gives an intuitive way to order nodes in a cycle.
      */
     public getParentsNeededInCycles(this: NodeCycles): Array<NodeId> {
-        let parents: Array<NodeId> = [];
+        const parents: Array<NodeId> = [];
         for (const cycle of this.paths) {
             const index = cycle.indexOf(this.node);
             if (index <= -1) {
@@ -152,7 +152,7 @@ class NodeCycles {
     public getParentsInCycles(this: NodeCycles): Array<NodeId> {
         // TODO: This could be optimized to computed together with getParentsNeededInCycles.
         // These can be computed once, when nodeCycles are finished gathering.
-        let parents: Array<NodeId> = [];
+        const parents: Array<NodeId> = [];
         for (const cycle of this.paths) {
             const index = cycle.indexOf(this.node);
             if (index <= -1) {

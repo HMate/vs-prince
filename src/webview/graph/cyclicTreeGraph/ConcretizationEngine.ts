@@ -4,12 +4,12 @@ import { OrganizationalLayers, OrganizationalLayer } from "./OrganizationEngine"
 
 export class ConcretizationEngine {
     public static concretize(graph: Graph, organization: OrganizationalLayers): ConcreteGraph {
-        let positions = new ConcreteGraph();
+        const positions = new ConcreteGraph();
         let curPos: Coord = { x: 0, y: 0 };
 
         // TODO: Move to config object
-        let nodeXMargin = 20.0;
-        let nodeYMargin = 75.0;
+        const nodeXMargin = 20.0;
+        const nodeYMargin = 75.0;
 
         for (const layer of organization) {
             const layerMaxHeight = this.getLayerHeight(graph, layer);
@@ -40,7 +40,7 @@ export class ConcretizationEngine {
     private static getLayerHeight(graph: Graph, layer: OrganizationalLayer) {
         let layerMaxHeight = 0.0;
         for (const node of layer) {
-            let orig = graph.node(node);
+            const orig = graph.node(node);
             layerMaxHeight = Math.max(layerMaxHeight, orig?.height ?? 0.0);
         }
         return layerMaxHeight;

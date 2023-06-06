@@ -2,18 +2,18 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { PrinceClient } from "./PrinceClient";
 
-export function activate(context: vscode.ExtensionContext) {
+export function activate(context: vscode.ExtensionContext): void {
     let cachedPanel: vscode.WebviewPanel | null = null;
 
-    let logChannel = vscode.window.createOutputChannel("VSPrince");
+    const logChannel = vscode.window.createOutputChannel("VSPrince");
     logChannel.appendLine("Command vs-prince activated");
 
-    let disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
+    const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
 
         // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.
         if (cachedPanel == null) {
-            let workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
+            const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
             cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
                 enableScripts: true,
                 localResourceRoots: [mediaUri].concat(workspaceUris),
@@ -26,8 +26,8 @@ export function activate(context: vscode.ExtensionContext) {
             });
         } else {
             cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
-            let filename = "D:\\projects\\testing\\pylab\\main.py";
-            let result = PrinceClient.callPrince(filename, "--dm");
+            const filename = "D:\\projects\\testing\\pylab\\main.py";
+            const result = PrinceClient.callPrince(filename, "--dm");
             let deps = {};
             try {
                 deps = JSON.parse(result);
@@ -45,7 +45,9 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate(): void {
+    console.log("Command vs-prince deactivated");
+}
 
 function updateViewHtml(panel: vscode.WebviewPanel, mediaUri: vscode.Uri) {
     const webviewHtmlUri = vscode.Uri.joinPath(mediaUri, "index.html");

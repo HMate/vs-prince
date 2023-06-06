@@ -1,9 +1,9 @@
-import { Graph } from "./Graph";
+import { Graph, ConcreteGraph } from "./Graph";
 import { OrganizationEngine } from "./cyclicTreeGraph/OrganizationEngine";
 import { ConcretizationEngine } from "./cyclicTreeGraph/ConcretizationEngine";
 
 export class GraphLayoutEngine {
-    public layoutCyclicTree(graph: Graph) {
+    public layoutCyclicTree(graph: Graph): ConcreteGraph {
         /* Layout does 2 steps: Organization and Concretization.
         Organization consists of placing nodes into logical positions.
         For cyclic tree this means organize into layers, without calculating node size, position or edge shape.
@@ -32,12 +32,12 @@ export class GraphLayoutEngine {
         Edges should be curved for backward edges. Their trajectory have to be computed. Nodes who are part of the 
         same cycle should be assinged to a group. The backward edges loop around the group.        
         */
-        let organization = OrganizationEngine.organize(graph);
-        let positions = ConcretizationEngine.concretize(graph, organization);
+        const organization = OrganizationEngine.organize(graph);
+        const positions = ConcretizationEngine.concretize(graph, organization);
         return positions;
     }
 
-    public layoutNestedGraph(graph: Graph) {
+    public layoutNestedGraph(_graph: Graph): void {
         /* Finding groups.
         Algo to determine group: 
         BFS on nodes:

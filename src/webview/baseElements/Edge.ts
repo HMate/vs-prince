@@ -1,5 +1,5 @@
 import { Path, Marker } from "@svgdotjs/svg.js";
-import { addCoord, asString, Coord, direction, mulCoord, negate } from "../utils";
+import { addCoord, asString, direction, mulCoord, negate } from "../utils";
 import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
 import { Box } from "./Box";
 
@@ -15,7 +15,7 @@ export class Edge {
         this.addMovementHandlers();
     }
 
-    public getPath() {
+    public getPath(): Path {
         return this.path;
     }
 
@@ -33,11 +33,11 @@ export class Edge {
         return this;
     }
 
-    public update() {
-        let startCoord = this.start.getBottomCenter();
-        let endCoord = this.end.getTopCenter();
-        let endDirection = direction(startCoord, endCoord);
-        let renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
+    public update(): this {
+        const startCoord = this.start.getBottomCenter();
+        const endCoord = this.end.getTopCenter();
+        const endDirection = direction(startCoord, endCoord);
+        const renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
         this.path.plot(`M ${asString(startCoord)} L ${asString(renderEnd)}`);
         this.path.addClass("pyprince-simple-edge");
         if (this.head != null) {
@@ -47,7 +47,7 @@ export class Edge {
     }
 
     private addMovementHandlers() {
-        let cb = (_event: MouseEvent) => {
+        const cb = (_event: MouseEvent) => {
             this.update();
         };
         this.start.getRoot().on("dragmove.namespace", cb);

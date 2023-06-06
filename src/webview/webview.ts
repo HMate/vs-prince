@@ -9,7 +9,7 @@ import { drawDependencies, drawDependenciesDagre } from "./DependencyVisualizer"
 
 let baseBuilder: BaseVisualizationBuilder;
 
-export function main(mediaUri: string) {
+export function main(mediaUri: string): void {
     TextToSVG.load(`${mediaUri}/font/RobotoMono.ttf`, (err: any, tts: TextToSVG | null) => {
         if (err || tts == null) {
             console.error(`Error while loading opentype text: ${err} | ${tts}`);
@@ -23,14 +23,14 @@ function buildVisualization(svgId: string, tts: TextToSVG) {
     baseBuilder = new BaseVisualizationBuilder(svgId, tts);
     baseBuilder.addCameraHandlers();
 
-    let box = baseBuilder.createBox({
+    const _box = baseBuilder.createBox({
         name: "Balu kapitány",
         boxStyle: { fill: "#66bb11" },
         textStyle: { fontSize: "1000px" },
     });
 }
 
-export function onExtensionMessage(message: BaseMessage) {
+export function onExtensionMessage(message: BaseMessage): void {
     console.log("Got message " + message.command);
     if (baseBuilder == null) {
         console.log(`Base builder should not be undefined: ${baseBuilder}`);
@@ -41,8 +41,8 @@ export function onExtensionMessage(message: BaseMessage) {
         return;
     }
     clearDiagram(baseBuilder);
-    drawDependencies(baseBuilder, message as DrawDependenciesMessage);
-    //drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
+    //drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+    drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
 }
 
 function clearDiagram(baseBuilder: BaseVisualizationBuilder) {
