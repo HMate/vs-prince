@@ -57,7 +57,7 @@ export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, mes
         return {};
     });
 
-    // create the boxes, because we need their sizes:
+    // create the boxes, because we need their sizes
     let boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
         let b = baseBuilder.createBox({ name: node });

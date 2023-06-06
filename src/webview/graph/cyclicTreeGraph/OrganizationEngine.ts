@@ -8,7 +8,7 @@ export class OrganizationEngine {
         return OrganizationEngine.createLayers(dependencies, cycles);
     }
 
-    /** Make double-linked list of nodes, to easy to search for cycles, layers */
+    /** Make double-linked list of nodes, to ease search for cycles, layers */
     public static gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
         let rel: ImmediateRelationships = { dependencies: new Map(), dependers: new Map() };
         for (const node of graph.nodes) {
@@ -104,9 +104,6 @@ interface ImmediateRelationships {
     dependers: Map<NodeId, Array<NodeId>>; // nodes that depend on key
 }
 
-export type OrganizationalLayer = Array<NodeId>;
-export type OrganizationalLayers = Array<OrganizationalLayer>;
-
 class CycleStore {
     private cycles: CycleRelationships = {};
 
@@ -125,6 +122,9 @@ class CycleStore {
 
 type CycleRelationships = { [node: NodeId]: NodeCycles };
 
+type Cycle = Array<NodeId>;
+
+/** Contains all the cycles that a node is part of. */
 class NodeCycles {
     public paths: Array<Cycle> = [];
     public nodes: Set<NodeId> = new Set();
@@ -168,7 +168,8 @@ class NodeCycles {
     }
 }
 
-type Cycle = Array<NodeId>;
+export type OrganizationalLayer = Array<NodeId>;
+export type OrganizationalLayers = Array<OrganizationalLayer>;
 
 class LayersBuilder {
     private layers: Array<OrganizationalLayer> = [];

@@ -46,7 +46,7 @@ export class Graph {
     }
 }
 
-/** A concrete graph differs from a simple Graph, that nodes and edges have concrete position data */
+/** A concrete graph differs from a simple Graph in that nodes and edges have concrete position data */
 export class ConcreteGraph {
     private nodePositions: Map<NodeId, ConcreteGraphNodePosition> = new Map();
     private edgePositions: Map<EdgeId, ConcreteGraphEdgePosition> = new Map();

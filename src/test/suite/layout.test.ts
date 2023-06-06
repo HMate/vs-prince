@@ -4,7 +4,7 @@ import { PrinceClient } from "../../PrinceClient";
 import { Graph, ConcreteGraph } from "../../webview/graph/Graph";
 import { GraphLayoutEngine } from "../../webview/graph/GraphLayoutEngine";
 
-describe("Test full dependecy layout", () => {
+describe("Test full dependency layout", () => {
     describe("on parsed python dependencies", () => {
         let filename = "D:\\projects\\testing\\pylab\\main.py";
         let result = PrinceClient.callPrince(filename, "--dm");

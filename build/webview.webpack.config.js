@@ -13,7 +13,8 @@ const config = {
     target: "web",
     mode: "none", // this leaves the source code as close as possible to the original (when packaging we set this to 'production')
 
-    devtool: "source-map",
+    // With inline-, we can debug ts files inside the webdeveloper tools of vscode. With cheap- the build is faster.
+    devtool: "inline-cheap-source-map",
     entry: "./src/webview/webview.ts",
     output: {
         // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
