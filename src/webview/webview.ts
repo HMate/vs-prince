@@ -5,6 +5,7 @@ import "@svgdotjs/svg.draggable.js";
 
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { BaseMessage, DrawDependenciesMessage } from "./extensionMessages";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { drawDependencies, drawDependenciesDagre } from "./DependencyVisualizer";
 
 let baseBuilder: BaseVisualizationBuilder;
