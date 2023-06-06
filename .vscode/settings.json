@@ -20,5 +20,6 @@
     },
 
     "mochaExplorer.files": "src/test/suite/*.ts",
-    "mochaExplorer.require": "ts-node/register"
+    "mochaExplorer.require": "ts-node/register",
+    "workbench.settings.openDefaultSettings": true
 }
