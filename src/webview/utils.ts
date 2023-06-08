@@ -45,8 +45,8 @@ export function diffCoord(start: Coord, end: Coord): Coord {
 }
 
 export function direction(start: Coord, end: Coord): Coord {
-    let d = diffCoord(start, end);
-    let magn = Math.sqrt(d.x * d.x + d.y * d.y);
+    const d = diffCoord(start, end);
+    const magn = Math.sqrt(d.x * d.x + d.y * d.y);
     return { x: d.x / magn, y: d.y / magn };
 }
 

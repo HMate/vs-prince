@@ -1,5 +1,5 @@
 import { Path, Marker } from "@svgdotjs/svg.js";
-import { addCoord, asString, direction, mulCoord, negate } from "../utils";
+import { Coord, addCoord, asString, direction, mulCoord, negate } from "../utils";
 import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
 import { Box } from "./Box";
 
@@ -8,7 +8,12 @@ export class Edge {
     private head: Marker | undefined;
     static readonly headLength = 6;
     static readonly headWidth = 8;
-    constructor(private readonly builder: BaseVisualizationBuilder, private start: Box, private end: Box) {
+    constructor(
+        private readonly builder: BaseVisualizationBuilder,
+        private start: Box,
+        private end: Box,
+        private controlPoints: Coord[] = []
+    ) {
         this.registerDef();
         this.path = this.builder.root.path();
         this.render().update();
@@ -38,12 +43,24 @@ export class Edge {
         const endCoord = this.end.getTopCenter();
         const endDirection = direction(startCoord, endCoord);
         const renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
-        this.path.plot(`M ${asString(startCoord)} L ${asString(renderEnd)}`);
+        const pathString = this.computePathString(startCoord, renderEnd, this.controlPoints);
+        this.path.plot(pathString);
+        this.path.attr({ fill: "none" });
         this.path.addClass("pyprince-simple-edge");
         if (this.head != null) {
             this.path.marker("end", this.head);
         }
         return this;
+    }
+
+    private computePathString(startCoord: Coord, endCoord: Coord, cps: Coord[]): string {
+        const upDirection: Coord = { x: 0, y: -1 };
+        let pathString = `M ${asString(startCoord)}`;
+        for (const cp of cps) {
+            pathString += ` L ${asString(cp)}`;
+        }
+        pathString += ` S ${asString(addCoord(endCoord, upDirection))} ${asString(endCoord)}`;
+        return pathString;
     }
 
     private addMovementHandlers() {

@@ -32,6 +32,7 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
 
     const layout = new GraphLayoutEngine();
     const positions = layout.layoutCyclicTree(graph);
+
     positions.nodes().forEach((nodeId: NodeId) => {
         const node = positions.nodePos(nodeId);
         const b = boxes[nodeId];
@@ -51,8 +52,8 @@ export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, mes
         return;
     }
 
-    const g = new dagre.graphlib.Graph();
-    g.setGraph({});
+    const g = new dagre.graphlib.Graph({ directed: true, compound: true });
+    g.setGraph({ compound: true, align: "UL", rankdir: "TB" });
     g.setDefaultEdgeLabel(function () {
         return {};
     });
@@ -75,6 +76,7 @@ export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, mes
     }
 
     dagre.layout(g);
+
     g.nodes().forEach(function (v) {
         const node = g.node(v);
         const b = boxes[v];
@@ -82,6 +84,7 @@ export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, mes
     });
 
     g.edges().forEach(function (edge) {
-        baseBuilder.createEdge(boxes[edge.v], boxes[edge.w]);
+        const cps = g.edge(edge).points;
+        baseBuilder.createEdge(boxes[edge.v], boxes[edge.w], cps.slice(1, cps.length - 1));
     });
 }
