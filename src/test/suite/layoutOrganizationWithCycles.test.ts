@@ -6,11 +6,11 @@ import { OrganizationEngine } from "../../webview/graph/cyclicTreeGraph/Organiza
 
 describe("Layout Organization with cycles", () => {
     describe("1. when single node depends on itself", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         graph.addNode({ name: "Aron", width: 30, height: 30 });
         graph.addEdge({ start: "Aron", end: "Aron" });
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 1 layer", () => {
             expect(layers).to.have.length(1);
@@ -22,13 +22,13 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("2. when middle node depends on itself", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine");
         graph.addEdge({ start: "Aron", end: "Bill" });
         graph.addEdge({ start: "Bill", end: "Bill" });
         graph.addEdge({ start: "Bill", end: "Celine" });
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 3 layers", () => {
             expect(layers).to.have.length(3);
@@ -46,11 +46,11 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("3. when graph contains a single long cycle", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine", "Dalma", "Ethan", "Fred");
         addCycle(graph, "Aron", "Bill", "Celine", "Dalma", "Ethan", "Fred");
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 6 layers", () => {
             expect(layers).to.have.length(6);
@@ -67,13 +67,13 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("4. when cycle starts in middle node", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine");
 
         graph.addEdge({ start: "Aron", end: "Bill" });
         addCycle(graph, "Bill", "Celine");
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 3 layers", () => {
             expect(layers).to.have.length(3);
@@ -87,13 +87,13 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("5. Test for node contained in 2 cycles", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine", "Dylan", "Erza");
 
         addCycle(graph, "Aron", "Celine", "Bill");
         addCycle(graph, "Dylan", "Celine", "Erza");
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 4 layers", () => {
             expect(layers).to.have.length(4);
@@ -108,14 +108,14 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("6. Test for node contained in 3 cycles", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine", "Dylan", "Erza", "Fidgerald");
 
         addCycle(graph, "Aron", "Bill", "Celine");
         addCycle(graph, "Bill", "Dylan", "Erza");
         addCycle(graph, "Fidgerald", "Bill");
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 4 layers", () => {
             expect(layers).to.have.length(4);
@@ -130,14 +130,14 @@ describe("Layout Organization with cycles", () => {
     });
 
     describe("7. Test for branch inside the cycle", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         addNodes(graph, "Aron", "Bill", "Celine");
 
         addCycle(graph, "Aron", "Bill");
         graph.addEdge({ start: "Aron", end: "Celine" });
         graph.addEdge({ start: "Celine", end: "Bill" });
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 3 layers", () => {
             expect(layers).to.have.length(3);
@@ -157,18 +157,12 @@ function addNodes(graph: Graph, ...nodes: string[]) {
     }
 }
 
-function addDeps(graph: Graph, root: string, nodes: string[]) {
-    for (const node of nodes) {
-        graph.addEdge({ start: root, end: node });
-    }
-}
-
 /** @brief Add dependencies nodes[0] -> nodes[1] -> ... -> nodes[last] -> nodes[0] */
 function addCycle(graph: Graph, ...nodes: string[]) {
     const size = nodes.length;
     for (const index of range(size)) {
-        let start = nodes[index];
-        let end = index + 1 === size ? nodes[0] : nodes[index + 1];
+        const start = nodes[index];
+        const end = index + 1 === size ? nodes[0] : nodes[index + 1];
         graph.addEdge({ start: start, end: end });
     }
 }

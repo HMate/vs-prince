@@ -8,7 +8,7 @@ export class SvgText extends SvgVisualElement {
         this.textElem = this.domElem as SVGTextElement;
     }
 
-    public text(text: string) {
+    public text(text: string): void {
         this.domElem.textContent = text;
     }
 }

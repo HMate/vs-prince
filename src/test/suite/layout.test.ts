@@ -6,11 +6,11 @@ import { GraphLayoutEngine } from "../../webview/graph/GraphLayoutEngine";
 
 describe("Test full dependency layout", () => {
     describe("on parsed python dependencies", () => {
-        let filename = "D:\\projects\\testing\\pylab\\main.py";
-        let result = PrinceClient.callPrince(filename, "--dm");
+        const filename = "D:\\projects\\testing\\pylab\\main.py";
+        const result = PrinceClient.callPrince(filename, "--dm");
 
-        let deps = JSON.parse(result);
-        let graph = new Graph();
+        const deps = JSON.parse(result);
+        const graph = new Graph();
         for (const node of deps.nodes) {
             graph.addNode({ name: node, width: 250.0, height: 60.0 });
         }
@@ -24,8 +24,8 @@ describe("Test full dependency layout", () => {
             }
         }
 
-        let layout = new GraphLayoutEngine();
-        let positions: ConcreteGraph = layout.layoutCyclicTree(graph);
+        const layout = new GraphLayoutEngine();
+        const positions: ConcreteGraph = layout.layoutCyclicTree(graph);
         it("should have same number of positions as nodes", () => {
             expect(positions?.nodes()).to.have.length(deps.nodes.length);
         });

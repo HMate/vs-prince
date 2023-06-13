@@ -4,12 +4,12 @@ import { range } from "../../webview/utils";
 
 describe("Range utils", () => {
     it("with range to 0", () => {
-        let r = range(0);
+        const r = range(0);
         expect(r).to.eql([]);
     });
 
     it("with range to 3", () => {
-        let r = range(3);
+        const r = range(3);
         expect(r).to.eql([0, 1, 2]);
     });
 
@@ -26,17 +26,17 @@ describe("Range utils", () => {
     });
 
     it("with negative start value", () => {
-        let r = range(-3, 6);
+        const r = range(-3, 6);
         expect(r).to.eql([-3, -2, -1, 0, 1, 2, 3, 4, 5]);
     });
 
     it("with equal from to", () => {
-        let r = range(2, 2);
+        const r = range(2, 2);
         expect(r).to.eql([]);
     });
 
     it("with inverted from to", () => {
-        let r = range(5, 2);
+        const r = range(5, 2);
         expect(r).to.eql([5, 4, 3]);
     });
 });

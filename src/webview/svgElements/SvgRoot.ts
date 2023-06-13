@@ -5,7 +5,7 @@ import { SvgVisualElement } from "./SvgVisualElement";
 export class SvgRoot {
     private rootElem: SVGSVGElement;
     private viewportElem: SvgGroup;
-    private zoomAmount: number = 1;
+    private zoomAmount = 1;
 
     private mouseMovementHandlers: Map<string, (ev: MouseEvent) => any> = new Map();
 
@@ -16,28 +16,28 @@ export class SvgRoot {
         this.rootElem.onmousemove = this.createMouseMovementHandler(this);
     }
 
-    public appendChild(elem: SvgVisualElement) {
+    public appendChild(elem: SvgVisualElement): void {
         this.viewportElem.appendChild(elem);
     }
 
-    public removeChild(elem: SvgVisualElement) {
+    public removeChild(elem: SvgVisualElement): void {
         this.viewportElem.removeChild(elem);
     }
 
-    public getDomElem() {
+    public getDomElem(): SVGSVGElement {
         return this.rootElem;
     }
 
-    public zoom(value: number, origin: Coord) {
+    public zoom(value: number, origin: Coord): void {
         this.zoomAmount += value;
 
-        let scale = this.rootElem.createSVGTransform();
+        const scale = this.rootElem.createSVGTransform();
         scale.setScale(this.zoomAmount, this.zoomAmount);
 
-        let center = this.rootElem.createSVGTransform();
+        const center = this.rootElem.createSVGTransform();
         center.setTranslate(origin.x, origin.y);
 
-        let centerOut = this.rootElem.createSVGTransform();
+        const centerOut = this.rootElem.createSVGTransform();
         centerOut.setTranslate(-origin.x, -origin.y);
 
         this.viewportElem.clearTransforms();
@@ -50,13 +50,13 @@ export class SvgRoot {
         return 1 / this.zoomAmount;
     }
 
-    public addMouseMovementHandler(key: string, handler: (ev: MouseEvent) => any) {
+    public addMouseMovementHandler(key: string, handler: (ev: MouseEvent) => any): void {
         this.mouseMovementHandlers.set(key, handler);
     }
 
     private createMouseMovementHandler(self: SvgRoot) {
         return (e: MouseEvent) => {
-            for (const [key, handler] of self.mouseMovementHandlers) {
+            for (const [_key, handler] of self.mouseMovementHandlers) {
                 handler(e);
             }
         };

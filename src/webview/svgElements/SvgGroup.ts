@@ -9,23 +9,23 @@ export class SvgGroup extends SvgVisualElement {
         this.gElem = this.domElem as SVGGElement;
     }
 
-    public appendChild(child: SvgVisualElement) {
+    public appendChild(child: SvgVisualElement): void {
         this.gElem.appendChild(child.getDomElem());
     }
 
-    public removeChild(child: SvgVisualElement) {
+    public removeChild(child: SvgVisualElement): void {
         this.gElem.removeChild(child.getDomElem());
     }
 
-    get children() {
+    get children(): Array<Element> {
         return Array.from(this.gElem.children);
     }
 
-    public clearTransforms() {
+    public clearTransforms(): void {
         this.gElem.transform.baseVal.clear();
     }
 
-    public transform(transformation: SVGTransform) {
+    public transform(transformation: SVGTransform): void {
         this.gElem.transform.baseVal.appendItem(transformation);
         // if (this.gElem.transform.baseVal.numberOfItems === 0) {
         //     this.gElem.transform.baseVal.appendItem(transformation);
@@ -42,13 +42,13 @@ export class SvgGroup extends SvgVisualElement {
         this.updatePos();
     }
 
+    get posX(): number {
+        return this.pos.x;
+    }
+
     set posY(value: number) {
         this.pos.y = value;
         this.updatePos();
-    }
-
-    get posX(): number {
-        return this.pos.x;
     }
 
     get posY(): number {

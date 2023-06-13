@@ -4,16 +4,14 @@
 
 import opentype from "opentype.js";
 
-const DEFAULT_FONT = "fonts/ipag.ttf";
-
 // Private method
 
 function parseAnchorOption(anchor: string) {
-    let hMatch = anchor.match(/left|center|right/gi) || [];
-    let horizontal = hMatch.length === 0 ? "left" : hMatch[0];
+    const hMatch = anchor.match(/left|center|right/gi) || [];
+    const horizontal = hMatch.length === 0 ? "left" : hMatch[0];
 
-    let vMatch = anchor.match(/baseline|top|bottom|middle/gi) || [];
-    let vertical = vMatch.length === 0 ? "baseline" : vMatch[0];
+    const vMatch = anchor.match(/baseline|top|bottom|middle/gi) || [];
+    const vertical = vMatch.length === 0 ? "baseline" : vMatch[0];
 
     return { horizontal, vertical };
 }
@@ -35,7 +33,7 @@ export default class TextToSVG {
     //     return new TextToSVG(opentype.loadSync(file));
     // }
 
-    static load(url: string, cb: (error: any, font: TextToSVG | null) => void | Promise<opentype.Font>) {
+    static load(url: string, cb: (error: any, font: TextToSVG | null) => void | Promise<opentype.Font>): void {
         opentype.load(url, (err, font) => {
             if (err != null || font == null) {
                 return cb(err, null);
@@ -45,7 +43,7 @@ export default class TextToSVG {
         });
     }
 
-    getWidth(text: string, options: TTSOptions) {
+    getWidth(text: string, options: TTSOptions): number {
         const fontSize = options.fontSize || 72;
         const kerning = "kerning" in options ? options.kerning : true;
         const fontScale = (1 / this.font.unitsPerEm) * fontSize;
@@ -73,12 +71,15 @@ export default class TextToSVG {
         return width;
     }
 
-    getHeight(fontSize: number) {
+    getHeight(fontSize: number): number {
         const fontScale = (1 / this.font.unitsPerEm) * fontSize;
         return (this.font.ascender - this.font.descender) * fontScale;
     }
 
-    getMetrics(text: string, options: TTSOptions = {}) {
+    getMetrics(
+        text: string,
+        options: TTSOptions = {}
+    ): { x: number; y: number; baseline: number; width: number; height: number; ascender: number; descender: number } {
         const fontSize = options.fontSize || 72;
         const anchor = parseAnchorOption(options.anchor || "");
 

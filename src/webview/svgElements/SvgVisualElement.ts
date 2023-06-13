@@ -1,5 +1,3 @@
-import { SvgInHtml } from "../utils";
-
 export class SvgVisualElement {
     protected domElem: SVGElement;
 
@@ -29,8 +27,8 @@ export class SvgVisualElement {
         return this.domElem.getBoundingClientRect().height;
     }
 
-    public getNumberAttribute(name: string, defaultValue: number = 0): number {
-        let value = this.domElem.getAttribute(name);
+    public getNumberAttribute(name: string, defaultValue = 0): number {
+        const value = this.domElem.getAttribute(name);
         if (value == null) {
             return defaultValue;
         }
@@ -38,7 +36,7 @@ export class SvgVisualElement {
     }
 
     public getAttribute(name: string, defaultValue: string | undefined = undefined): string | undefined {
-        let value = this.domElem.getAttribute(name);
+        const value = this.domElem.getAttribute(name);
         if (value == null) {
             return defaultValue;
         }

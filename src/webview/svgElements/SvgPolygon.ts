@@ -11,21 +11,21 @@ export class SvgPolygon extends SvgVisualElement {
     }
 
     get points(): Array<Point> {
-        let result: Array<Point> = [];
+        const result: Array<Point> = [];
         for (let i = 0; i < this.classElem.points.numberOfItems; i++) {
-            let p = this.classElem.points.getItem(i);
+            const p = this.classElem.points.getItem(i);
             result.push([p.x, p.y]);
         }
         return result;
     }
 
     set posX(value: number) {
-        let points: Array<Point> = this.originalPoints.map((p) => [p[0] + value, p[1]]);
+        const points: Array<Point> = this.originalPoints.map((p) => [p[0] + value, p[1]]);
         this.setPolygonPoints(points);
     }
 
     set posY(value: number) {
-        let points: Array<Point> = this.originalPoints.map((p) => [p[0], p[1] + value]);
+        const points: Array<Point> = this.originalPoints.map((p) => [p[0], p[1] + value]);
         this.setPolygonPoints(points);
     }
 

@@ -5,9 +5,9 @@ import { OrganizationEngine } from "../../webview/graph/cyclicTreeGraph/Organiza
 
 describe("Layout Organization", () => {
     describe("with single node", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         graph.addNode({ name: "Aron", width: 30, height: 30 });
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have single layer", () => {
             expect(layers).to.have.length(1);
@@ -16,13 +16,13 @@ describe("Layout Organization", () => {
     });
 
     describe("with two nodes and a single edge", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         graph.addNode({ name: "Aron", width: 30, height: 30 });
         graph.addNode({ name: "Bill", width: 30, height: 30 });
 
         graph.addEdge({ start: "Aron", end: "Bill" });
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 2 layers", () => {
             expect(layers).to.have.length(2);
@@ -35,7 +35,7 @@ describe("Layout Organization", () => {
     });
 
     describe("with 3 nodes on 3 layers", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         graph.addNode({ name: "Aron", width: 30, height: 30 });
         graph.addNode({ name: "Bill", width: 30, height: 30 });
         graph.addNode({ name: "Celine", width: 30, height: 30 });
@@ -43,7 +43,7 @@ describe("Layout Organization", () => {
         graph.addEdge({ start: "Aron", end: "Bill" });
         graph.addEdge({ start: "Bill", end: "Celine" });
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 3 layers", () => {
             expect(layers).to.have.length(3);
@@ -57,7 +57,7 @@ describe("Layout Organization", () => {
     });
 
     describe("with dependency through multiple layers", () => {
-        let graph = new Graph();
+        const graph = new Graph();
         // prettier-ignore
         addNodes(graph, 
             "Dep11", 
@@ -70,7 +70,7 @@ describe("Layout Organization", () => {
         addDeps(graph, "Dep21", ["Dep31"]);
         addDeps(graph, "Dep31", ["Dep41", "Dep42"]);
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 2 nodes in last layer", () => {
             expect(layers[3].length).to.equal(2);
@@ -82,7 +82,7 @@ describe("Layout Organization", () => {
     });
 
     describe("with many nodes without cycle", () => {
-        let graph = new Graph();
+        const graph = new Graph();
 
         // prettier-ignore
         addNodes(graph,
@@ -113,7 +113,7 @@ describe("Layout Organization", () => {
         addDeps(graph, "Dep52", ["Dep61"]);
         addDeps(graph, "Dep61", ["Dep71"]);
 
-        let layers = OrganizationEngine.organize(graph);
+        const layers = OrganizationEngine.organize(graph);
 
         it("should have 7 layers", () => {
             expect(layers).to.have.length(7);
