@@ -76,5 +76,9 @@
     "prettier": {
         "printWidth": 120,
         "tabWidth": 4
+    },
+    "dependencies": {
+        "elkjs": "^0.8.2",
+        "web-worker": "^1.2.0"
     }
 }

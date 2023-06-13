@@ -6,14 +6,17 @@ import { Box } from "./Box";
 export class Edge {
     private path: Path;
     private head: Marker | undefined;
+    private portPlacementOnSide: boolean; // For now: false is Top to bottom, true is left to right
     static readonly headLength = 6;
     static readonly headWidth = 8;
     constructor(
         private readonly builder: BaseVisualizationBuilder,
         private start: Box,
         private end: Box,
-        private controlPoints: Coord[] = []
+        private controlPoints: Coord[] = [],
+        portsOnRightSide = false
     ) {
+        this.portPlacementOnSide = portsOnRightSide;
         this.registerDef();
         this.path = this.builder.root.path();
         this.render().update();
@@ -39,8 +42,9 @@ export class Edge {
     }
 
     public update(): this {
-        const startCoord = this.start.getBottomCenter();
-        const endCoord = this.end.getTopCenter();
+        const startCoord =
+            this.portPlacementOnSide === true ? this.start.getRightCenter() : this.start.getBottomCenter();
+        const endCoord = this.portPlacementOnSide === true ? this.end.getLeftCenter() : this.end.getTopCenter();
         const endDirection = direction(startCoord, endCoord);
         const renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
         const pathString = this.computePathString(startCoord, renderEnd, this.controlPoints);

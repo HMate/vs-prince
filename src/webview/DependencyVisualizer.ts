@@ -1,4 +1,5 @@
 import dagre from "dagre";
+import elk, { ElkNode } from "elkjs";
 
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
@@ -45,6 +46,73 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
         if (pos) {
             baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
         }
+    });
+}
+
+export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+    if (baseBuilder == null) {
+        return;
+    }
+
+    const elkEngine = new elk();
+    const g: ElkNode = {
+        id: "root",
+        layoutOptions: {
+            "elk.algorithm": "layered",
+        },
+        children: [],
+        edges: [],
+    };
+
+    // create the boxes, because we need their sizes
+    const boxes: { [name: string]: Box } = {};
+    for (const node of message.data.nodes) {
+        const b = baseBuilder.createBox({ name: node });
+        boxes[node] = b;
+        g.children!.push({ id: node, width: b.width(), height: b.height() / 2 });
+    }
+
+    let edgeId = 0;
+    for (const node in message.data.edges) {
+        if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
+            const depList = message.data.edges[node];
+            for (const dep of depList) {
+                g.edges?.push({ id: `e${edgeId}`, sources: [node], targets: [dep] });
+                edgeId++;
+            }
+        }
+    }
+
+    // const myGraph = createGraphFromMessage(message);
+    // const compoundG: NestedGraph = NestedGraphLayoutEngine.assignSubGraphGroups(myGraph);
+
+    // for (const [graphId, graph] of Object.entries(compoundG.graphs)) {
+    //     let width = 2;
+    //     let height = 2;
+    //     graph.nodes.forEach((node) => {
+    //         const b = boxes[node.name];
+    //         width += b.width();
+    //         height += b.height();
+    //     });
+    //     g.setNode(graphId, { label: graphId, width, height });
+    //     graph.nodes.forEach((node) => {
+    //         g.setParent(node.name, graphId);
+    //     });
+    // }
+
+    elkEngine.layout(g).then((graph) => {
+        graph.children?.forEach((v) => {
+            if (boxes[v.id] == null) {
+                return; // Key is for a compound group node, not a real node
+            }
+            const b = boxes[v.id];
+            b.move(v.x ?? 0, v.y ?? 0);
+        });
+
+        graph.edges?.forEach(function (edge) {
+            const cps = edge.junctionPoints ?? [];
+            baseBuilder.createEdge(boxes[edge.sources[0]], boxes[edge.targets[0]], cps.slice(1, cps.length - 1), true);
+        });
     });
 }
 

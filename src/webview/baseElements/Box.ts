@@ -88,12 +88,20 @@ export class Box {
         return Number(this.shapeHolder.height());
     }
 
+    public getTopCenter(): Coord {
+        return { x: this.root.cx(), y: this.root.y() };
+    }
+
     public getBottomCenter(): Coord {
         return { x: this.root.cx(), y: this.root.y() + this.root.height() };
     }
 
-    public getTopCenter(): Coord {
-        return { x: this.root.cx(), y: this.root.y() };
+    public getLeftCenter(): Coord {
+        return { x: this.root.cx() - this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
+    }
+
+    public getRightCenter(): Coord {
+        return { x: this.root.cx() + this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
     }
 
     public move(cx: number, cy: number): void {

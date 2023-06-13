@@ -6,7 +6,7 @@ import "@svgdotjs/svg.draggable.js";
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { BaseMessage, DrawDependenciesMessage } from "./extensionMessages";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { drawDependencies, drawDependenciesDagre } from "./DependencyVisualizer";
+import { drawDependencies, drawDependenciesElk } from "./DependencyVisualizer";
 
 let baseBuilder: BaseVisualizationBuilder;
 
@@ -43,7 +43,7 @@ export function onExtensionMessage(message: BaseMessage): void {
     }
     clearDiagram(baseBuilder);
     //drawDependencies(baseBuilder, message as DrawDependenciesMessage);
-    drawDependenciesDagre(baseBuilder, message as DrawDependenciesMessage);
+    drawDependenciesElk(baseBuilder, message as DrawDependenciesMessage);
 }
 
 function clearDiagram(baseBuilder: BaseVisualizationBuilder) {
