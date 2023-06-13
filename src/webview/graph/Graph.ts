@@ -1,7 +1,7 @@
 export type NodeId = string;
 
 export type EdgeId = string;
-export function toEdgeId(start: NodeId, end: NodeId) {
+export function toEdgeId(start: NodeId, end: NodeId): string {
     return start + "@e@" + end;
 }
 
@@ -18,14 +18,14 @@ export interface GraphEdge {
 
 /** A simple graph structure, that holds nodes and edges */
 export class Graph {
-    private nodeList: Array<GraphNode> = [];
-    private edgeList: Array<GraphEdge> = [];
+    protected nodeList: Array<GraphNode> = [];
+    protected edgeList: Array<GraphEdge> = [];
 
-    public addNode(node: GraphNode) {
+    public addNode(node: GraphNode): void {
         this.nodeList.push(node);
     }
 
-    public addEdge(edge: GraphEdge) {
+    public addEdge(edge: GraphEdge): void {
         this.edgeList.push(edge);
     }
 
@@ -51,11 +51,11 @@ export class ConcreteGraph {
     private nodePositions: Map<NodeId, ConcreteGraphNodePosition> = new Map();
     private edgePositions: Map<EdgeId, ConcreteGraphEdgePosition> = new Map();
 
-    public addNode(node: ConcreteGraphNodePosition) {
+    public addNode(node: ConcreteGraphNodePosition): void {
         this.nodePositions.set(node.name, node);
     }
 
-    public addEdge(edge: ConcreteGraphEdgePosition) {
+    public addEdge(edge: ConcreteGraphEdgePosition): void {
         this.edgePositions.set(toEdgeId(edge.start, edge.end), edge);
     }
 

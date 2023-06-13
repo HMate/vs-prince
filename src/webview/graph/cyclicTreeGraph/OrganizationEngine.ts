@@ -10,18 +10,18 @@ export class OrganizationEngine {
 
     /** Make double-linked list of nodes, to ease search for cycles, layers */
     public static gatherImmediateNeighbours(graph: Graph): ImmediateRelationships {
-        const rel: ImmediateRelationships = { dependencies: new Map(), dependers: new Map() };
+        const rel: ImmediateRelationships = { dependencies: new Map(), parents: new Map() };
         for (const node of graph.nodes) {
-            if (rel.dependers.has(node.name)) {
+            if (rel.parents.has(node.name)) {
                 console.warn(`Found duplicated nodeId: ${node.name}`);
                 continue;
             }
-            rel.dependers.set(node.name, []);
+            rel.parents.set(node.name, []);
             rel.dependencies.set(node.name, []);
         }
         for (const edge of graph.edges) {
             rel.dependencies.get(edge.start)!.push(edge.end);
-            rel.dependers.get(edge.end)!.push(edge.start);
+            rel.parents.get(edge.end)!.push(edge.start);
         }
         return rel;
     }
@@ -75,19 +75,19 @@ export class OrganizationEngine {
         let layerWasEmpty = false;
 
         while (!layerWasEmpty) {
-            for (const node of relations.dependers.keys()) {
+            for (const node of relations.parents.keys()) {
                 if (layers.isInPrevLayer(node)) {
                     continue;
                 }
 
                 // Place node on layer when parents are either not in cycle or already placed
-                const parents: Array<NodeId> = relations.dependers.get(node)!;
+                const parents: Array<NodeId> = relations.parents.get(node)!;
                 const nodeCycles: NodeCycles = cycles.getNodeCycles(node);
                 const cycleParents = new Set(nodeCycles.getParentsInCycles());
                 const nonCycleParents = parents.filter((parent) => !cycleParents.has(parent));
                 const parentsNeededInCycle = new Set(nodeCycles.getParentsNeededInCycles());
                 const relevantParents = [...nonCycleParents, ...parentsNeededInCycle];
-                const everyParentPlaced = relevantParents.every((parent) => layers.isInPrevLayer(parent));
+                const everyParentPlaced: boolean = relevantParents.every((parent) => layers.isInPrevLayer(parent));
                 if (everyParentPlaced) {
                     layers.addToLayer(node);
                 }
@@ -101,7 +101,7 @@ export class OrganizationEngine {
 
 interface ImmediateRelationships {
     dependencies: Map<NodeId, Array<NodeId>>; // nodes that key depend on
-    dependers: Map<NodeId, Array<NodeId>>; // nodes that depend on key
+    parents: Map<NodeId, Array<NodeId>>; // nodes that depend on key
 }
 
 class CycleStore {
