@@ -59,6 +59,8 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
         id: "root",
         layoutOptions: {
             "elk.algorithm": "layered",
+            "org.eclipse.elk.layered.nodePlacement.strategy": "NodePlacementStrategy.NETWORK_SIMPLEX",
+            "elk.alignment": "Alignment.CENTER",
         },
         children: [],
         edges: [],
