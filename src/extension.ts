@@ -25,6 +25,8 @@ export function activate(context: vscode.ExtensionContext): void {
                 cachedPanel = null;
             });
         } else {
+            logChannel.appendLine("Start drawing dependencies");
+
             cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
             const filename = "D:\\projects\\testing\\pylab\\main.py";
             const result = PrinceClient.callPrince(filename, "--dm");
@@ -38,6 +40,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
             logChannel.appendLine(`Sending draw-dependencies for ${filename}`);
             cachedPanel.webview.postMessage({ command: "draw-dependencies", data: deps });
+
+            logChannel.appendLine("Finished drawing dependencies");
         }
     });
 

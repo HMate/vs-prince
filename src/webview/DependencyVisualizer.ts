@@ -58,20 +58,23 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
     const g: ElkNode = {
         id: "root",
         layoutOptions: {
-            "elk.algorithm": "layered",
-            "org.eclipse.elk.layered.nodePlacement.strategy": "NodePlacementStrategy.NETWORK_SIMPLEX",
-            "elk.alignment": "Alignment.CENTER",
+            "org.eclipse.elk.algorithm": "layered",
+            "org.eclipse.elk.hierarchyHandling": "INCLUDE_CHILDREN",
+            "org.eclipse.elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+            "org.eclipse.elk.direction": "RIGHT" /*DOWN, RIGHT*/,
+            "org.eclipse.elk.edgeRouting": "SPLINES",
         },
         children: [],
         edges: [],
     };
+    //"org.eclipse.elk.direction": "RIGHT",
 
     // create the boxes, because we need their sizes
     const boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
         const b = baseBuilder.createBox({ name: node });
         boxes[node] = b;
-        g.children!.push({ id: node, width: b.width(), height: b.height() / 2 });
+        g.children!.push({ id: node, width: b.width(), height: b.height() });
     }
 
     let edgeId = 0;
