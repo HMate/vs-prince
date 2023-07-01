@@ -80,7 +80,12 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
         const compountNode: ElkNode = { id: graphId, children: [] };
         graph.nodes.forEach((node: GraphNode) => {
             const b = boxes[node.name];
-            compountNode.children!.push({ id: node.name, width: b.width(), height: b.height() });
+            compountNode.children!.push({
+                id: node.name,
+                labels: [{ text: node.name }],
+                width: b.width(),
+                height: b.height(),
+            });
         });
         g.children!.push(compountNode);
     }
@@ -106,7 +111,7 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
                     // Key is for a compound group node
                     v.children?.forEach((child) => {
                         const b = boxes[child.id];
-                        b.move(parentX + (child.x ?? 0), parentY + (child.y ?? 0));
+                        b.move(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
                     });
                     return;
                 }
