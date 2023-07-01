@@ -4,7 +4,7 @@ import elk, { ElkNode } from "elkjs";
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
 import { Box } from "./baseElements/Box";
-import { Graph, NodeId, EdgeId } from "./graph/Graph";
+import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
 
@@ -67,14 +67,23 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
         children: [],
         edges: [],
     };
-    //"org.eclipse.elk.direction": "RIGHT",
 
     // create the boxes, because we need their sizes
     const boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
-        const b = baseBuilder.createBox({ name: node });
-        boxes[node] = b;
-        g.children!.push({ id: node, width: b.width(), height: b.height() });
+        boxes[node] = baseBuilder.createBox({ name: node });
+    }
+
+    const myGraph = createGraphFromMessage(message);
+    const compoundG: NestedGraph = NestedGraphLayoutEngine.assignSubGraphGroups(myGraph);
+
+    for (const [graphId, graph] of Object.entries(compoundG.graphs)) {
+        const compountNode: ElkNode = { id: graphId, children: [] };
+        graph.nodes.forEach((node: GraphNode) => {
+            const b = boxes[node.name];
+            compountNode.children!.push({ id: node.name, width: b.width(), height: b.height() });
+        });
+        g.children!.push(compountNode);
     }
 
     let edgeId = 0;
@@ -88,37 +97,37 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
         }
     }
 
-    // const myGraph = createGraphFromMessage(message);
-    // const compoundG: NestedGraph = NestedGraphLayoutEngine.assignSubGraphGroups(myGraph);
+    elkEngine
+        .layout(g)
+        .then((graph) => {
+            graph.children?.forEach((v) => {
+                if (boxes[v.id] == null) {
+                    const parentX = v.x ?? 0;
+                    const parentY = v.y ?? 0;
+                    // Key is for a compound group node
+                    v.children?.forEach((child) => {
+                        const b = boxes[child.id];
+                        b.move(parentX + (child.x ?? 0), parentY + (child.y ?? 0));
+                    });
+                    return;
+                }
+                const b = boxes[v.id];
+                b.move(v.x ?? 0, v.y ?? 0);
+            });
 
-    // for (const [graphId, graph] of Object.entries(compoundG.graphs)) {
-    //     let width = 2;
-    //     let height = 2;
-    //     graph.nodes.forEach((node) => {
-    //         const b = boxes[node.name];
-    //         width += b.width();
-    //         height += b.height();
-    //     });
-    //     g.setNode(graphId, { label: graphId, width, height });
-    //     graph.nodes.forEach((node) => {
-    //         g.setParent(node.name, graphId);
-    //     });
-    // }
-
-    elkEngine.layout(g).then((graph) => {
-        graph.children?.forEach((v) => {
-            if (boxes[v.id] == null) {
-                return; // Key is for a compound group node, not a real node
-            }
-            const b = boxes[v.id];
-            b.move(v.x ?? 0, v.y ?? 0);
+            graph.edges?.forEach(function (edge) {
+                const cps = edge.junctionPoints ?? [];
+                baseBuilder.createEdge(
+                    boxes[edge.sources[0]],
+                    boxes[edge.targets[0]],
+                    cps.slice(1, cps.length - 1),
+                    true
+                );
+            });
+        })
+        .catch((layoutError) => {
+            console.error(layoutError);
         });
-
-        graph.edges?.forEach(function (edge) {
-            const cps = edge.junctionPoints ?? [];
-            baseBuilder.createEdge(boxes[edge.sources[0]], boxes[edge.targets[0]], cps.slice(1, cps.length - 1), true);
-        });
-    });
 }
 
 export function drawDependenciesDagre(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
