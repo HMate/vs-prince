@@ -116,7 +116,8 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
             });
 
             graph.edges?.forEach(function (edge) {
-                const cps = edge.junctionPoints ?? [];
+                console.log(edge.sections?.length);
+                const cps = edge.sections![0].bendPoints ?? [];
                 baseBuilder.createEdge(
                     boxes[edge.sources[0]],
                     boxes[edge.targets[0]],
