@@ -1,5 +1,5 @@
 import TextToSVG from "./TextToSvg";
-import "./font/RobotoMono.ttf";
+import RobotoFont from "./font/RobotoMono.ttf";
 import "./webview-style.scss";
 import "@svgdotjs/svg.draggable.js";
 
@@ -11,7 +11,8 @@ import { drawDependencies } from "./DependencyVisualizer";
 let baseBuilder: BaseVisualizationBuilder;
 
 export function main(mediaUri: string): void {
-    TextToSVG.load(`${mediaUri}/font/RobotoMono.ttf`, (err: any, tts: TextToSVG | null) => {
+    showLoadingElement();
+    TextToSVG.load(`${mediaUri}/${RobotoFont}`, (err: any, tts: TextToSVG | null) => {
         if (err || tts == null) {
             console.error(`Error while loading opentype text: ${err} | ${tts}`);
             return;
@@ -25,18 +26,34 @@ function buildVisualization(svgId: string, tts: TextToSVG) {
     baseBuilder.addCameraHandlers();
 }
 
-export function onExtensionMessage(message: BaseMessage): void {
+export async function onExtensionMessage(message: BaseMessage): Promise<void> {
     console.log("Got message " + message.command);
     if (baseBuilder == null) {
         console.log(`Base builder should not be undefined: ${baseBuilder}`);
         return;
     }
 
-    if (message.command !== "draw-dependencies") {
-        return;
+    if (message.command === "draw-dependencies") {
+        await handleDrawDependenciesMessage(message as DrawDependenciesMessage);
+        hideLoadingElement();
+    } else if (message.command === "show-loading") {
+        showLoadingElement();
+    } else {
+        console.log(`Unknown message command: ${message.command}`);
     }
+}
+
+function showLoadingElement(): void {
+    document.getElementById("loading")!.style.display = "flex";
+}
+
+function hideLoadingElement(): void {
+    document.getElementById("loading")!.style.display = "none";
+}
+
+async function handleDrawDependenciesMessage(message: DrawDependenciesMessage): Promise<void> {
     clearDiagram(baseBuilder);
-    drawDependencies(baseBuilder, message as DrawDependenciesMessage);
+    await drawDependencies(baseBuilder, message);
 }
 
 function clearDiagram(baseBuilder: BaseVisualizationBuilder) {

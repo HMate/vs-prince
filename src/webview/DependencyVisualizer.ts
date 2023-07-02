@@ -8,7 +8,10 @@ import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
 import { Coord, addCoord } from "./utils";
 
-export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+export async function drawDependencies(
+    baseBuilder: BaseVisualizationBuilder,
+    message: DrawDependenciesMessage
+): Promise<void> {
     drawDependenciesElk(baseBuilder, message);
 }
 
@@ -53,7 +56,10 @@ function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message:
     });
 }
 
-function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+async function drawDependenciesElk(
+    baseBuilder: BaseVisualizationBuilder,
+    message: DrawDependenciesMessage
+): Promise<void> {
     if (baseBuilder == null) {
         return;
     }
@@ -106,46 +112,47 @@ function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, message: Dra
         }
     }
 
-    elkEngine
-        .layout(g)
-        .then((graph) => {
-            const groupNodes: { [name: string]: Coord } = {};
-            graph.children?.forEach((v) => {
-                if (boxes[v.id] == null) {
-                    const parentX = v.x ?? 0;
-                    const parentY = v.y ?? 0;
-                    groupNodes[v.id] = { x: parentX, y: parentY };
-                    // Key is for a compound group node
-                    v.children?.forEach((child) => {
-                        const b = boxes[child.id];
-                        b.move(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
-                    });
-                    return;
-                }
-                const b = boxes[v.id];
-                b.move((v.x ?? 0) + b.width() / 2, (v.y ?? 0) + b.height() / 2);
-            });
+    let graph: ElkNode;
+    try {
+        graph = await elkEngine.layout(g);
+    } catch (layoutError) {
+        console.error(layoutError);
+        return;
+    }
 
-            graph.edges?.forEach(function (edge: ElkExtendedEdge) {
-                console.log(edge.sections?.length);
-                let localOrigin: Coord = { x: 0, y: 0 };
-                if ((edge as any).container !== "root") {
-                    localOrigin = groupNodes[(edge as any).container];
-                }
-                const section = edge.sections![0];
-                const cps = section.bendPoints?.map((p) => addCoord(p, localOrigin)) ?? [];
-                baseBuilder.createEdge(
-                    boxes[edge.sources[0]],
-                    boxes[edge.targets[0]],
-                    cps,
-                    addCoord(section.startPoint, localOrigin),
-                    addCoord(section.endPoint, localOrigin)
-                );
+    const groupNodes: { [name: string]: Coord } = {};
+    graph.children?.forEach((v) => {
+        if (boxes[v.id] == null) {
+            const parentX = v.x ?? 0;
+            const parentY = v.y ?? 0;
+            groupNodes[v.id] = { x: parentX, y: parentY };
+            // Key is for a compound group node
+            v.children?.forEach((child) => {
+                const b = boxes[child.id];
+                b.move(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
             });
-        })
-        .catch((layoutError) => {
-            console.error(layoutError);
-        });
+            return;
+        }
+        const b = boxes[v.id];
+        b.move((v.x ?? 0) + b.width() / 2, (v.y ?? 0) + b.height() / 2);
+    });
+
+    graph.edges?.forEach(function (edge: ElkExtendedEdge) {
+        console.log(edge.sections?.length);
+        let localOrigin: Coord = { x: 0, y: 0 };
+        if ((edge as any).container !== "root") {
+            localOrigin = groupNodes[(edge as any).container];
+        }
+        const section = edge.sections![0];
+        const cps = section.bendPoints?.map((p) => addCoord(p, localOrigin)) ?? [];
+        baseBuilder.createEdge(
+            boxes[edge.sources[0]],
+            boxes[edge.targets[0]],
+            cps,
+            addCoord(section.startPoint, localOrigin),
+            addCoord(section.endPoint, localOrigin)
+        );
+    });
 }
 
 function createGraphFromMessage(message: DrawDependenciesMessage): Graph {

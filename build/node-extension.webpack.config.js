@@ -6,7 +6,7 @@ const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 class WatchTimerPlugin {
     apply(compiler) {
         compiler.hooks.done.tap("Watch Timer Plugin", (stats) => {
-            console.log("\n[" + new Date().toLocaleString() + "]" + " --- Extension done.\n");
+            console.log("\n[" + new Date().toLocaleString() + "] --- Extension done.\n");
         });
     }
 }

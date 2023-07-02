@@ -2,24 +2,43 @@
     font-family: "DynamoFont";
     src: url(./font/RobotoMono.ttf);
   }
-  html,
-  body,
-  .prince-svg-root {
-    height: 100%;
+
+html,
+body,
+.prince-svg-root {
+height: 100%;
+width: 100%;
+background: whitesmoke;
+}
+
+.prince-box {
+    fill: #b4b3b3;
+}
+
+.prince-box-name {
+    font-size: 22px;
+    text-anchor: middle;
+}
+
+.pyprince-simple-edge {
+    stroke: black;
+    stroke-width: 3;
+}
+
+#loading {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
-    background: whitesmoke;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0.7;
+    background-color: #fff;
+    z-index: 99;
   }
-
-  .prince-box {
-      fill: #b4b3b3;
-  }
-
-  .prince-box-name {
-      font-size: 22px;
-      text-anchor: middle;
-  }
-
-  .pyprince-simple-edge {
-      stroke: black;
-      stroke-width: 3;
+  
+  #loading-image {
+    z-index: 100;
   }

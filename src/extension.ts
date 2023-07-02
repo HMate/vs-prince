@@ -41,6 +41,7 @@ export function deactivate(): void {
 
 function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): void {
     logTerminal(logChannel, "Start drawing dependencies");
+    panel.webview.postMessage({ command: "show-loading" });
 
     const filename = "D:\\projects\\testing\\pylab\\main.py";
     const result = PrinceClient.callPrince(filename, "--dm");

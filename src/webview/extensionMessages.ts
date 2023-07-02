@@ -11,3 +11,7 @@ export interface DrawDependenciesMessage extends BaseMessage {
     command: "draw-dependencies";
     data: DependencyGraph;
 }
+
+export interface ShowLoadingMessage extends BaseMessage {
+    command: "show-loading";
+}
