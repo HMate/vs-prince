@@ -6,7 +6,7 @@ export function activate(context: vscode.ExtensionContext): void {
     let cachedPanel: vscode.WebviewPanel | null = null;
 
     const logChannel = vscode.window.createOutputChannel("VSPrince");
-    logChannel.appendLine("Command vs-prince activated");
+    logTerminal(logChannel, "Command vs-prince activated");
 
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
@@ -24,24 +24,10 @@ export function activate(context: vscode.ExtensionContext): void {
             cachedPanel.onDidDispose(() => {
                 cachedPanel = null;
             });
+            drawPythonDependencies(logChannel, cachedPanel);
         } else {
-            logChannel.appendLine("Start drawing dependencies");
-
             cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
-            const filename = "D:\\projects\\testing\\pylab\\main.py";
-            const result = PrinceClient.callPrince(filename, "--dm");
-            let deps = {};
-            try {
-                deps = JSON.parse(result);
-            } catch (error) {
-                logChannel.appendLine(`Failed to parse json with error ${error}:\n${result}`);
-                return;
-            }
-
-            logChannel.appendLine(`Sending draw-dependencies for ${filename}`);
-            cachedPanel.webview.postMessage({ command: "draw-dependencies", data: deps });
-
-            logChannel.appendLine("Finished drawing dependencies");
+            drawPythonDependencies(logChannel, cachedPanel);
         }
     });
 
@@ -51,6 +37,30 @@ export function activate(context: vscode.ExtensionContext): void {
 // this method is called when your extension is deactivated
 export function deactivate(): void {
     console.log("Command vs-prince deactivated");
+}
+
+function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): void {
+    logTerminal(logChannel, "Start drawing dependencies");
+
+    const filename = "D:\\projects\\testing\\pylab\\main.py";
+    const result = PrinceClient.callPrince(filename, "--dm");
+    let deps = {};
+    try {
+        deps = JSON.parse(result);
+    } catch (error) {
+        logTerminal(logChannel, `Failed to parse json with error ${error}:\n${result}`);
+        return;
+    }
+
+    logTerminal(logChannel, `Sending draw-dependencies for ${filename}`);
+    panel.webview.postMessage({ command: "draw-dependencies", data: deps });
+
+    logTerminal(logChannel, "Finished drawing dependencies");
+}
+
+function logTerminal(channel: vscode.OutputChannel, message: string): void {
+    // use date-fns package in future?
+    channel.appendLine(`${new Date().toISOString()} - ` + message);
 }
 
 function updateViewHtml(panel: vscode.WebviewPanel, mediaUri: vscode.Uri) {

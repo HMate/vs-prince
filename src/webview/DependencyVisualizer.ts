@@ -9,6 +9,10 @@ import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutE
 import { Coord, addCoord } from "./utils";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+    drawDependenciesElk(baseBuilder, message);
+}
+
+function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
     if (baseBuilder == null) {
         return;
     }
@@ -49,7 +53,7 @@ export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message:
     });
 }
 
-export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
     if (baseBuilder == null) {
         return;
     }
@@ -71,7 +75,7 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
     // create the boxes, because we need their sizes
     const boxes: { [name: string]: Box } = {};
     for (const node of message.data.nodes) {
-        boxes[node] = baseBuilder.createBox({ name: node });
+        boxes[node] = baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
     }
 
     const myGraph = createGraphFromMessage(message);
