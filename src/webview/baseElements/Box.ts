@@ -104,6 +104,14 @@ export class Box {
         return { x: this.root.cx() + this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
     }
 
+    public createOffsetPointFromScenePoint(scenePoint: Coord): Coord {
+        return { x: scenePoint.x - this.root.cx(), y: scenePoint.y - this.root.cy() };
+    }
+
+    public getScenePointFromOffsetPoint(offsetPoint: Coord): Coord {
+        return { x: offsetPoint.x + this.root.cx(), y: offsetPoint.y + this.root.cy() };
+    }
+
     public move(cx: number, cy: number): void {
         this.root.cx(cx);
         this.root.cy(cy);

@@ -1,4 +1,4 @@
-import elk, { ElkNode } from "elkjs";
+import elk, { ElkExtendedEdge, ElkNode } from "elkjs";
 
 import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
 import { DrawDependenciesMessage } from "./extensionMessages";
@@ -6,6 +6,7 @@ import { Box } from "./baseElements/Box";
 import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
+import { Coord, addCoord } from "./utils";
 
 export function drawDependencies(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
     if (baseBuilder == null) {
@@ -61,7 +62,7 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
             "org.eclipse.elk.hierarchyHandling": "INCLUDE_CHILDREN",
             "org.eclipse.elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
             "org.eclipse.elk.direction": "RIGHT" /*DOWN, RIGHT*/,
-            "org.eclipse.elk.edgeRouting": "SPLINES",
+            "org.eclipse.elk.edgeRouting": "POLYLINE",
         },
         children: [],
         edges: [],
@@ -95,7 +96,7 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
         if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
             const depList = message.data.edges[node];
             for (const dep of depList) {
-                g.edges?.push({ id: `e${edgeId}`, sources: [node], targets: [dep] });
+                g.edges?.push({ id: `e${edgeId}_${node}_${dep}`, sources: [node], targets: [dep] });
                 edgeId++;
             }
         }
@@ -104,10 +105,12 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
     elkEngine
         .layout(g)
         .then((graph) => {
+            const groupNodes: { [name: string]: Coord } = {};
             graph.children?.forEach((v) => {
                 if (boxes[v.id] == null) {
                     const parentX = v.x ?? 0;
                     const parentY = v.y ?? 0;
+                    groupNodes[v.id] = { x: parentX, y: parentY };
                     // Key is for a compound group node
                     v.children?.forEach((child) => {
                         const b = boxes[child.id];
@@ -116,17 +119,23 @@ export function drawDependenciesElk(baseBuilder: BaseVisualizationBuilder, messa
                     return;
                 }
                 const b = boxes[v.id];
-                b.move(v.x ?? 0, v.y ?? 0);
+                b.move((v.x ?? 0) + b.width() / 2, (v.y ?? 0) + b.height() / 2);
             });
 
-            graph.edges?.forEach(function (edge) {
+            graph.edges?.forEach(function (edge: ElkExtendedEdge) {
                 console.log(edge.sections?.length);
-                const cps = edge.sections![0].bendPoints ?? [];
+                let localOrigin: Coord = { x: 0, y: 0 };
+                if ((edge as any).container !== "root") {
+                    localOrigin = groupNodes[(edge as any).container];
+                }
+                const section = edge.sections![0];
+                const cps = section.bendPoints?.map((p) => addCoord(p, localOrigin)) ?? [];
                 baseBuilder.createEdge(
                     boxes[edge.sources[0]],
                     boxes[edge.targets[0]],
-                    cps.slice(1, cps.length - 1),
-                    true
+                    cps,
+                    addCoord(section.startPoint, localOrigin),
+                    addCoord(section.endPoint, localOrigin)
                 );
             });
         })

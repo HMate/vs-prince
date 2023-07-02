@@ -8,7 +8,7 @@ export class BaseVisualizationBuilder extends SvgVisualizationBuilder {
         return new Box(this, this.tts, desc);
     }
 
-    public createEdge(start: Box, end: Box, controlPoints: Coord[] = [], portsOnRightSide = false): Edge {
-        return new Edge(this, start, end, controlPoints, portsOnRightSide);
+    public createEdge(start: Box, end: Box, controlPoints: Coord[] = [], startPoint?: Coord, endPoint?: Coord): Edge {
+        return new Edge(this, start, end, controlPoints, startPoint, endPoint);
     }
 }
