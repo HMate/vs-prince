@@ -2,14 +2,14 @@ export interface BaseMessage {
     command: string;
 }
 
-export interface DependencyGraph {
+export interface DependencyGraphDescriptor {
     nodes: Array<string>;
     edges: { [name: string]: Array<string> };
 }
 
 export interface DrawDependenciesMessage extends BaseMessage {
     command: "draw-dependencies";
-    data: DependencyGraph;
+    data: DependencyGraphDescriptor;
 }
 
 export interface ShowLoadingMessage extends BaseMessage {

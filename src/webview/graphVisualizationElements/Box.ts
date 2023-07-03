@@ -1,6 +1,6 @@
 import { Container, Rect, Text } from "@svgdotjs/svg.js";
 
-import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
+import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
 import TextToSVG from "../TextToSvg";
 import { Coord } from "../utils";
 
@@ -8,6 +8,7 @@ export interface BoxDescription {
     name: string;
     width?: number;
     height?: number;
+    centerPosition?: Coord;
     boxStyle?: any;
     textStyle?: any; // Uses text attributes, and not css props
 }
@@ -25,11 +26,11 @@ export class Box {
     private nameHolder: Text;
 
     constructor(
-        private readonly builder: BaseVisualizationBuilder,
+        private readonly builder: GraphVisualizationBuilder,
         private tts: TextToSVG,
         description?: BoxDescription
     ) {
-        this.desc = description ?? { name: "" };
+        this.desc = Object.assign({}, description ?? { name: "" });
         if (description?.width) {
             this.desc.width = description?.width;
         } else {
@@ -44,7 +45,21 @@ export class Box {
         this.root = this.builder.createGroup();
         this.shapeHolder = this.builder.createRect();
         this.nameHolder = this.builder.createText(this.desc.name);
+
         this.render().update();
+
+        // Have to call moveCenter after render+update, because they both change the size and thus affect how center is calculated
+        if (description?.centerPosition) {
+            this.moveCenter(description.centerPosition.x, description.centerPosition.y);
+        }
+    }
+
+    public serialize(): BoxDescription {
+        return { ...this.desc };
+    }
+
+    public name(): string {
+        return this.desc.name;
     }
 
     private render() {
@@ -70,7 +85,7 @@ export class Box {
         return this;
     }
 
-    public update(): this {
+    private update(): this {
         this.nameHolder.text(this.desc.name);
         this.nameHolder.center(Number(this.shapeHolder.width()) / 2, Number(this.shapeHolder.height()) / 2);
         return this;
@@ -104,20 +119,25 @@ export class Box {
         return { x: this.root.cx() + this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
     }
 
-    public createOffsetPointFromScenePoint(scenePoint: Coord): Coord {
+    public SceneCoordToLocalCoord(scenePoint: Coord): Coord {
         return { x: scenePoint.x - this.root.cx(), y: scenePoint.y - this.root.cy() };
     }
 
-    public getScenePointFromOffsetPoint(offsetPoint: Coord): Coord {
+    public LocalCoordToSceneCoord(offsetPoint: Coord): Coord {
         return { x: offsetPoint.x + this.root.cx(), y: offsetPoint.y + this.root.cy() };
     }
 
-    public move(cx: number, cy: number): void {
+    public moveCenter(cx: number, cy: number): void {
+        this.desc.centerPosition = { x: cx, y: cy };
         this.root.cx(cx);
         this.root.cy(cy);
     }
 
     private addMovementHandlers(group: Container): void {
         group.draggable();
+        const cb = (_event: MouseEvent) => {
+            this.desc.centerPosition = { x: this.root.cx(), y: this.root.cy() };
+        };
+        this.getRoot().on("dragmove.namespace", cb);
     }
 }

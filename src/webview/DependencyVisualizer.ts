@@ -1,21 +1,21 @@
 import elk, { ElkExtendedEdge, ElkNode } from "elkjs";
 
-import { BaseVisualizationBuilder } from "./BaseVisualizationBuilder";
-import { DrawDependenciesMessage } from "./extensionMessages";
-import { Box } from "./baseElements/Box";
+import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
+import { DependencyGraphDescriptor } from "./extensionMessages";
+import { Box } from "./graphVisualizationElements/Box";
 import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
 import { Coord, addCoord } from "./utils";
 
 export async function drawDependencies(
-    baseBuilder: BaseVisualizationBuilder,
-    message: DrawDependenciesMessage
+    baseBuilder: GraphVisualizationBuilder,
+    descriptor: DependencyGraphDescriptor
 ): Promise<void> {
-    drawDependenciesElk(baseBuilder, message);
+    await drawDependenciesElk(baseBuilder, descriptor);
 }
 
-function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message: DrawDependenciesMessage): void {
+function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descriptor: DependencyGraphDescriptor): void {
     if (baseBuilder == null) {
         return;
     }
@@ -24,15 +24,15 @@ function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message:
 
     // create the boxes, because we need their sizes:
     const boxes: { [name: NodeId]: Box } = {};
-    for (const node of message.data.nodes) {
+    for (const node of descriptor.nodes) {
         const b = baseBuilder.createBox({ name: node });
         boxes[node] = b;
         graph.addNode({ name: node, width: b.width(), height: b.height() / 2 });
     }
 
-    for (const node in message.data.edges) {
-        if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
-            const depList = message.data.edges[node];
+    for (const node in descriptor.edges) {
+        if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
+            const depList = descriptor.edges[node];
             for (const dep of depList) {
                 graph.addEdge({ start: node, end: dep });
             }
@@ -45,7 +45,7 @@ function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message:
     positions.nodes().forEach((nodeId: NodeId) => {
         const node = positions.nodePos(nodeId);
         const b = boxes[nodeId];
-        b.move(node?.cx ?? 0, node?.cy ?? 0);
+        b.moveCenter(node?.cx ?? 0, node?.cy ?? 0);
     });
 
     positions.edges().forEach((edge: EdgeId) => {
@@ -57,8 +57,8 @@ function _drawDependenciesCustom(baseBuilder: BaseVisualizationBuilder, message:
 }
 
 async function drawDependenciesElk(
-    baseBuilder: BaseVisualizationBuilder,
-    message: DrawDependenciesMessage
+    baseBuilder: GraphVisualizationBuilder,
+    descriptor: DependencyGraphDescriptor
 ): Promise<void> {
     if (baseBuilder == null) {
         return;
@@ -80,11 +80,11 @@ async function drawDependenciesElk(
 
     // create the boxes, because we need their sizes
     const boxes: { [name: string]: Box } = {};
-    for (const node of message.data.nodes) {
+    for (const node of descriptor.nodes) {
         boxes[node] = baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
     }
 
-    const myGraph = createGraphFromMessage(message);
+    const myGraph = createGraphFromMessage(descriptor);
     const compoundG: NestedGraph = NestedGraphLayoutEngine.assignSubGraphGroups(myGraph);
 
     for (const [graphId, graph] of Object.entries(compoundG.graphs)) {
@@ -102,9 +102,9 @@ async function drawDependenciesElk(
     }
 
     let edgeId = 0;
-    for (const node in message.data.edges) {
-        if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
-            const depList = message.data.edges[node];
+    for (const node in descriptor.edges) {
+        if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
+            const depList = descriptor.edges[node];
             for (const dep of depList) {
                 g.edges?.push({ id: `e${edgeId}_${node}_${dep}`, sources: [node], targets: [dep] });
                 edgeId++;
@@ -129,12 +129,12 @@ async function drawDependenciesElk(
             // Key is for a compound group node
             v.children?.forEach((child) => {
                 const b = boxes[child.id];
-                b.move(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
+                b.moveCenter(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
             });
             return;
         }
         const b = boxes[v.id];
-        b.move((v.x ?? 0) + b.width() / 2, (v.y ?? 0) + b.height() / 2);
+        b.moveCenter((v.x ?? 0) + b.width() / 2, (v.y ?? 0) + b.height() / 2);
     });
 
     graph.edges?.forEach(function (edge: ElkExtendedEdge) {
@@ -155,14 +155,14 @@ async function drawDependenciesElk(
     });
 }
 
-function createGraphFromMessage(message: DrawDependenciesMessage): Graph {
+function createGraphFromMessage(descriptor: DependencyGraphDescriptor): Graph {
     const graph = new Graph();
-    for (const node of message.data.nodes) {
+    for (const node of descriptor.nodes) {
         graph.addNode({ name: node, width: 1, height: 1 });
     }
-    for (const node in message.data.edges) {
-        if (Object.prototype.hasOwnProperty.call(message.data.edges, node)) {
-            const depList = message.data.edges[node];
+    for (const node in descriptor.edges) {
+        if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
+            const depList = descriptor.edges[node];
             for (const dep of depList) {
                 graph.addEdge({ start: node, end: dep });
             }

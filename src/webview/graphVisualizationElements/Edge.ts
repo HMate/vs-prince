@@ -1,15 +1,25 @@
 import { Path, Marker } from "@svgdotjs/svg.js";
 import { Coord, addCoord, asString, direction, mulCoord, negate } from "../utils";
-import { BaseVisualizationBuilder } from "../BaseVisualizationBuilder";
+import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
 import { Box } from "./Box";
+import { NodeId } from "../graph/Graph";
+
+export interface EdgeDescription {
+    start: NodeId;
+    end: NodeId;
+    controlPoints: Coord[];
+    startPoint?: Coord;
+    endPoint?: Coord;
+}
 
 export class Edge {
     private path: Path;
     private head: Marker | undefined;
+    private desc: EdgeDescription;
     static readonly headLength = 6;
     static readonly headWidth = 8;
     constructor(
-        private readonly builder: BaseVisualizationBuilder,
+        private readonly builder: GraphVisualizationBuilder,
         private start: Box,
         private end: Box,
         private controlPoints: Coord[] = [],
@@ -22,11 +32,19 @@ export class Edge {
         // if startPoint is given, it is in scene coords. We convert these to offset coords from the boxes,
         // so we when the box moves we can move the edge too.
         if (this.startPoint !== undefined) {
-            this.startPoint = this.start.createOffsetPointFromScenePoint(this.startPoint);
+            this.startPoint = this.start.SceneCoordToLocalCoord(this.startPoint);
         }
         if (this.endPoint !== undefined) {
-            this.endPoint = this.end.createOffsetPointFromScenePoint(this.endPoint);
+            this.endPoint = this.end.SceneCoordToLocalCoord(this.endPoint);
         }
+
+        this.desc = {
+            start: this.start.name(),
+            end: this.end.name(),
+            controlPoints: this.controlPoints,
+            startPoint: this.startPoint,
+            endPoint: this.endPoint,
+        };
 
         this.render().update();
         this.addMovementHandlers();
@@ -34,6 +52,15 @@ export class Edge {
 
     public getPath(): Path {
         return this.path;
+    }
+
+    public serialize(): EdgeDescription {
+        const result = {
+            ...this.desc,
+            startPoint: this.startPoint !== undefined ? this.start.LocalCoordToSceneCoord(this.startPoint) : undefined,
+            endPoint: this.endPoint !== undefined ? this.end.LocalCoordToSceneCoord(this.endPoint) : undefined,
+        };
+        return result;
     }
 
     private registerDef() {
@@ -50,15 +77,13 @@ export class Edge {
         return this;
     }
 
-    public update(): this {
+    private update(): this {
         const startCoord =
             this.startPoint !== undefined
-                ? this.start.getScenePointFromOffsetPoint(this.startPoint)
+                ? this.start.LocalCoordToSceneCoord(this.startPoint)
                 : this.start.getBottomCenter();
         const endCoord =
-            this.endPoint !== undefined
-                ? this.end.getScenePointFromOffsetPoint(this.endPoint)
-                : this.end.getTopCenter();
+            this.endPoint !== undefined ? this.end.LocalCoordToSceneCoord(this.endPoint) : this.end.getTopCenter();
         const endDirection = direction(startCoord, endCoord);
         const renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
         const pathString = this.computePathString(startCoord, renderEnd, this.controlPoints);
