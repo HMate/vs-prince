@@ -9,8 +9,10 @@ import { BaseMessage, DrawDependenciesMessage } from "./extensionMessages";
 import { drawDependencies } from "./DependencyVisualizer";
 
 let baseBuilder: BaseVisualizationBuilder;
-
 export function main(mediaUri: string): void {
+    // TODO: theming in css - https://code.visualstudio.com/api/extension-guides/webview#theming-webview-content
+    // and https://github.com/microsoft/vscode-webview-ui-toolkit/blob/main/docs/getting-started.md
+    const _vscode = acquireVsCodeApi(); // This can be used to send messages to the extension if needed.
     showLoadingElement();
     TextToSVG.load(`${mediaUri}/${RobotoFont}`, (err: any, tts: TextToSVG | null) => {
         if (err || tts == null) {

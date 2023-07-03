@@ -9,25 +9,30 @@ export function activate(context: vscode.ExtensionContext): void {
     logTerminal(logChannel, "Command vs-prince activated");
 
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
-        const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
+        try {
+            const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
+            // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.
+            if (cachedPanel == null) {
+                const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
+                cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
+                    enableScripts: true,
+                    localResourceRoots: [mediaUri].concat(workspaceUris),
+                });
 
-        // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.
-        if (cachedPanel == null) {
-            const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
-            cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
-                enableScripts: true,
-                localResourceRoots: [mediaUri].concat(workspaceUris),
-            });
+                updateViewHtml(cachedPanel, mediaUri);
 
-            updateViewHtml(cachedPanel, mediaUri);
-
-            cachedPanel.onDidDispose(() => {
-                cachedPanel = null;
-            });
-            drawPythonDependencies(logChannel, cachedPanel);
-        } else {
-            cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
-            drawPythonDependencies(logChannel, cachedPanel);
+                cachedPanel.onDidDispose(() => {
+                    // Fired when user closes the webview tab.
+                    cachedPanel = null;
+                });
+                drawPythonDependencies(logChannel, cachedPanel);
+            } else {
+                cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
+                drawPythonDependencies(logChannel, cachedPanel);
+            }
+        } catch (error) {
+            logTerminal(logChannel, `Prince py deps run into error: ${error}`);
+            vscode.window.showErrorMessage(`Prince py deps run into error: ${error}`);
         }
     });
 
@@ -40,20 +45,25 @@ export function deactivate(): void {
 }
 
 function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): void {
-    logTerminal(logChannel, "Start drawing dependencies");
     panel.webview.postMessage({ command: "show-loading" });
-
-    const filename = "D:\\projects\\testing\\pylab\\main.py";
-    const result = PrinceClient.callPrince(filename, "--dm");
+    const editor = vscode.window.activeTextEditor;
+    if (editor == null) {
+        vscode.window.showInformationMessage("No file selected to show dependencies for");
+        return;
+    }
+    logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
+    const result = PrinceClient.callPrince(editor.document.fileName, "--dm");
     let deps = {};
     try {
         deps = JSON.parse(result);
     } catch (error) {
+        // TODO: pyprince should give back a structured response, not a simple string. Maybe create a local server?
         logTerminal(logChannel, `Failed to parse json with error ${error}:\n${result}`);
+        vscode.window.showErrorMessage(`Prince py deps cannot handle pyprince result: ${error}`);
         return;
     }
 
-    logTerminal(logChannel, `Sending draw-dependencies for ${filename}`);
+    logTerminal(logChannel, `Sending draw-dependencies for ${editor.document.fileName}`);
     panel.webview.postMessage({ command: "draw-dependencies", data: deps });
 
     logTerminal(logChannel, "Finished drawing dependencies");
