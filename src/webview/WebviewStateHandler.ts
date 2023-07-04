@@ -1,5 +1,6 @@
 import { WebviewApi } from "vscode-webview";
 import { GraphVisualizationDescription } from "./GraphVisualizationBuilder";
+import { CameraState } from "./SvgVisualizationBuilder";
 
 /** Can be used for tracking if the state was saved with a compatible version.
  * If CURRENT_VIEW_STATE_VERSION is changed, state saved in older versions of vsc-prince will be
@@ -7,7 +8,8 @@ import { GraphVisualizationDescription } from "./GraphVisualizationBuilder";
 export const CURRENT_VIEW_STATE_VERSION = "1";
 export interface PrinceViewState {
     version: string;
-    data: GraphVisualizationDescription;
+    sceneData: GraphVisualizationDescription;
+    cameraState: CameraState;
 }
 
 /** Can be used to send messages to the extension if needed, and to store state for webview panels */

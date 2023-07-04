@@ -8,6 +8,8 @@ export interface GraphVisualizationDescription {
     edges: EdgeDescription[];
 }
 
+/** Use this class to place graph elements into the scene, like nodes and boxes.
+ * The class itself uses the SvgVisualizationBuilder class to build the graph elements from low-level svg elements. */
 export class GraphVisualizationBuilder extends SvgVisualizationBuilder {
     private graphElements = { boxes: new Array<Box>(), edges: new Array<Edge>() };
     public createBox(desc?: BoxDescription): Box {

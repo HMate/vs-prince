@@ -5,7 +5,6 @@ import "@svgdotjs/svg.draggable.js";
 
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from "./extensionMessages";
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { drawDependencies } from "./DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "./WebviewStateHandler";
 
@@ -33,12 +32,13 @@ export function entrypoint(mediaUri: string): void {
 
 function initVisualizationBuilder(svgId: string, tts: TextToSVG, viewState: WebviewStateHandler) {
     baseBuilder = new GraphVisualizationBuilder(svgId, tts);
-    baseBuilder.addCameraHandlers();
+    baseBuilder.initCamera(saveViewState);
 
     if (viewState.hasState()) {
         const state = viewState.getState();
         if (state != null && state.version === CURRENT_VIEW_STATE_VERSION) {
-            baseBuilder.deserialize(state.data);
+            baseBuilder.deserialize(state.sceneData);
+            baseBuilder.setCamera(state.cameraState);
             hideLoadingElement();
         }
     }
@@ -55,15 +55,22 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
         const descriptor = (message as DrawDependenciesMessage).data;
         await handleDrawDependenciesMessage(descriptor);
         hideLoadingElement();
-        // TODO: Also save camera state
-        // TODO: Also save after camera moves, or when box/edge moves or changes
-        viewState.setState({ version: CURRENT_VIEW_STATE_VERSION, data: baseBuilder.serialize() });
+        saveViewState();
     } else if (message.command === "show-loading") {
         showLoadingElement();
         viewState.clearState();
     } else {
         console.log(`Unknown message command: ${message.command}`);
     }
+}
+
+function saveViewState(): void {
+    // TODO: Also save after box/edge moves or changes
+    viewState.setState({
+        version: CURRENT_VIEW_STATE_VERSION,
+        sceneData: baseBuilder.serialize(),
+        cameraState: baseBuilder.getCameraState(),
+    });
 }
 
 function showLoadingElement(): void {

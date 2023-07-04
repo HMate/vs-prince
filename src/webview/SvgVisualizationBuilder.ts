@@ -1,14 +1,26 @@
 import { Svg, SVG, Element, Rect, Text, Circle, Container } from "@svgdotjs/svg.js";
+import { Marker, Polygon, Box } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.panzoom.js";
-import { Marker, Polygon } from "@svgdotjs/svg.js";
 
 import SvgComplexContainer from "./svgElements/SvgComplexContainer";
-import { Point } from "./utils";
+import { Coord, Point } from "./utils";
 import TextToSVG from "./TextToSvg";
+
+export interface CameraState {
+    zoomLevel: number;
+    zoomPoint: Coord;
+    cameraViewbox: { x: number; y: number; width: number; height: number };
+}
 
 export class SvgVisualizationBuilder {
     readonly root: Svg;
     private readonly registeredDefs: { [id: string]: Marker } = {};
+    private cameraProperties: CameraState = {
+        zoomLevel: 1,
+        zoomPoint: { x: 0, y: 0 },
+        cameraViewbox: { x: 0, y: 0, width: 0, height: 0 },
+    };
+
     constructor(rootId: string, protected tts: TextToSVG) {
         const bodyRect = document?.getElementsByTagName("body")?.item(0)?.getBoundingClientRect();
         const windowSize =
@@ -18,6 +30,8 @@ export class SvgVisualizationBuilder {
         this.root.id(`#${rootId}`);
         this.root.addClass(`${rootId}-root`);
         this.root.viewbox(0, 0, windowSize.width, windowSize.height);
+        this.cameraProperties.zoomLevel = this.root.zoom(null);
+        this.cameraProperties.cameraViewbox = this.root.viewbox();
     }
 
     public addChildToGroup(group: Container, child: Element): void {
@@ -70,14 +84,34 @@ export class SvgVisualizationBuilder {
         return this.root.text(text);
     }
 
-    /**
-     * Polygon coordinate origin is in left-top.
-     */
+    /** Polygon coordinate origin is in left-top. */
     public createPolygon(points: Array<Point>): Polygon {
         return this.root.polygon(points.map((p) => `${p[0]},${p[1]}`).join(" "));
     }
 
-    public addCameraHandlers(): void {
+    /** Initializes the camera for the scene. The callback gets invoked after camera pan and zoom events */
+    public initCamera(onCameraEventCallback?: (builder: this) => void): void {
         this.root.panZoom({ zoomMin: 0.2, zoomMax: 2, zoomFactor: 0.1 });
+        this.root.on("panEnd", (_ev: CustomEvent<MouseEvent>) => {
+            onCameraEventCallback?.(this);
+        });
+        this.root.on("panning", (ev: CustomEvent<{ box: Box; event: MouseEvent }>) => {
+            this.cameraProperties.cameraViewbox = ev.detail.box;
+        });
+        this.root.on("zoom", (ev: CustomEvent<{ level: number; focus: Coord }>) => {
+            this.cameraProperties.zoomLevel = ev.detail.level;
+            this.cameraProperties.zoomPoint = ev.detail.focus;
+            onCameraEventCallback?.(this);
+        });
+    }
+
+    public getCameraState(): CameraState {
+        return this.cameraProperties;
+    }
+
+    public setCamera(state: CameraState): void {
+        this.cameraProperties = state;
+        this.root.zoom(state.zoomLevel, state.zoomPoint);
+        this.root.viewbox(state.cameraViewbox);
     }
 }
