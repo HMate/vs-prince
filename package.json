@@ -34,7 +34,7 @@
     },
     "devDependencies": {
         "@svgdotjs/svg.draggable.js": "^3.0.2",
-        "@svgdotjs/svg.js": "~3.0.16",
+        "@svgdotjs/svg.js": "~3.2.0",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
         "@types/chai": "^4.2.22",
         "@types/glob": "^7.1.3",

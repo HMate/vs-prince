@@ -5,6 +5,7 @@ import "@svgdotjs/svg.panzoom.js";
 import SvgComplexContainer from "./svgElements/SvgComplexContainer";
 import { Coord, Point } from "./utils";
 import TextToSVG from "./TextToSvg";
+import { Point as SvgPoint } from "@svgdotjs/svg.js";
 
 export interface CameraState {
     zoomLevel: number;
@@ -30,7 +31,7 @@ export class SvgVisualizationBuilder {
         this.root.id(`#${rootId}`);
         this.root.addClass(`${rootId}-root`);
         this.root.viewbox(0, 0, windowSize.width, windowSize.height);
-        this.cameraProperties.zoomLevel = this.root.zoom(null);
+        this.cameraProperties.zoomLevel = this.root.zoom();
         this.cameraProperties.cameraViewbox = this.root.viewbox();
     }
 
@@ -92,17 +93,17 @@ export class SvgVisualizationBuilder {
     /** Initializes the camera for the scene. The callback gets invoked after camera pan and zoom events */
     public initCamera(onCameraEventCallback?: (builder: this) => void): void {
         this.root.panZoom({ zoomMin: 0.2, zoomMax: 2, zoomFactor: 0.1 });
-        this.root.on("panEnd", (_ev: CustomEvent<MouseEvent>) => {
+        this.root.on("panEnd", (_ev: Event) => {
             onCameraEventCallback?.(this);
         });
-        this.root.on("panning", (ev: CustomEvent<{ box: Box; event: MouseEvent }>) => {
+        this.root.on("panning", ((ev: CustomEvent<{ box: Box; event: MouseEvent }>) => {
             this.cameraProperties.cameraViewbox = ev.detail.box;
-        });
-        this.root.on("zoom", (ev: CustomEvent<{ level: number; focus: Coord }>) => {
+        }) as EventListener);
+        this.root.on("zoom", ((ev: CustomEvent<{ level: number; focus: Coord }>) => {
             this.cameraProperties.zoomLevel = ev.detail.level;
             this.cameraProperties.zoomPoint = ev.detail.focus;
             onCameraEventCallback?.(this);
-        });
+        }) as EventListener);
     }
 
     public getCameraState(): CameraState {
@@ -111,7 +112,7 @@ export class SvgVisualizationBuilder {
 
     public setCamera(state: CameraState): void {
         this.cameraProperties = state;
-        this.root.zoom(state.zoomLevel, state.zoomPoint);
+        this.root.zoom(state.zoomLevel, new SvgPoint(state.zoomPoint.x, state.zoomPoint.y));
         this.root.viewbox(state.cameraViewbox);
     }
 }

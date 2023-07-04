@@ -104,19 +104,25 @@ export class Box {
     }
 
     public getTopCenter(): Coord {
-        return { x: this.root.cx(), y: this.root.y() };
+        return { x: this.root.cx(), y: Number(this.root.y()) };
     }
 
     public getBottomCenter(): Coord {
-        return { x: this.root.cx(), y: this.root.y() + this.root.height() };
+        return { x: this.root.cx(), y: Number(this.root.y()) + Number(this.root.height()) };
     }
 
     public getLeftCenter(): Coord {
-        return { x: this.root.cx() - this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
+        return {
+            x: this.root.cx() - Number(this.root.width()) / 2.0,
+            y: Number(this.root.y()) + Number(this.root.height()) / 2.0,
+        };
     }
 
     public getRightCenter(): Coord {
-        return { x: this.root.cx() + this.root.width() / 2.0, y: this.root.y() + this.root.height() / 2.0 };
+        return {
+            x: this.root.cx() + Number(this.root.width()) / 2.0,
+            y: Number(this.root.y()) + Number(this.root.height()) / 2.0,
+        };
     }
 
     public SceneCoordToLocalCoord(scenePoint: Coord): Coord {
@@ -138,6 +144,6 @@ export class Box {
         const cb = (_event: MouseEvent) => {
             this.desc.centerPosition = { x: this.root.cx(), y: this.root.cy() };
         };
-        this.getRoot().on("dragmove.namespace", cb);
+        this.getRoot().on("dragmove.namespace", cb as EventListener);
     }
 }

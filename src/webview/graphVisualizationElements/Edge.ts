@@ -107,7 +107,7 @@ export class Edge {
     }
 
     private addMovementHandlers() {
-        const cb = (_event: MouseEvent) => {
+        const cb = () => {
             this.update();
         };
         this.start.getRoot().on("dragmove.namespace", cb);
