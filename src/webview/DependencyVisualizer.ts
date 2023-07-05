@@ -73,6 +73,8 @@ async function drawDependenciesElk(
             "org.eclipse.elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
             "org.eclipse.elk.direction": "RIGHT" /*DOWN, RIGHT*/,
             "org.eclipse.elk.edgeRouting": "POLYLINE",
+            "org.eclipse.elk.layered.feedbackEdges": "true",
+            "org.eclipse.elk.layered.mergeEdges": "true",
         },
         children: [],
         edges: [],
