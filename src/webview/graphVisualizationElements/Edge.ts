@@ -1,5 +1,5 @@
 import { Path, Marker } from "@svgdotjs/svg.js";
-import { Coord, addCoord, asString, direction, mulCoord, negate } from "../utils";
+import { Coord, asString } from "../utils";
 import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
 import { Box } from "./Box";
 import { NodeId } from "../graph/Graph";
@@ -16,8 +16,8 @@ export class Edge {
     private path: Path;
     private head: Marker | undefined;
     private desc: EdgeDescription;
-    static readonly headLength = 6;
-    static readonly headWidth = 8;
+    static readonly headLength = 3;
+    static readonly headWidth = 4;
     constructor(
         private readonly builder: GraphVisualizationBuilder,
         private start: Box,
@@ -26,7 +26,6 @@ export class Edge {
         private startPoint?: Coord,
         private endPoint?: Coord
     ) {
-        this.registerDef();
         this.path = this.builder.root.path();
 
         // if startPoint is given, it is in scene coords. We convert these to offset coords from the boxes,
@@ -63,13 +62,15 @@ export class Edge {
         return result;
     }
 
-    private registerDef() {
-        this.head = this.builder.registerDef("simpleEdge", Edge.headLength, Edge.headWidth, function (head) {
-            head.polygon(`0,0 ${Edge.headLength},${Edge.headWidth / 2} 0,${Edge.headWidth}`);
+    private registerArrowDef() {
+        this.head = this.builder.registerDef("simpleEdge", Edge.headLength, Edge.headWidth, "auto", function (head) {
+            // 0,0 is top left
+            head.path(`M 0 0 L ${Edge.headLength} ${Edge.headWidth / 2} L 0 ${Edge.headWidth} z`);
         });
     }
 
     private render() {
+        this.registerArrowDef();
         this.path.addClass("pyprince-simple-edge");
         if (this.head != null) {
             this.path.marker("end", this.head);
@@ -84,25 +85,18 @@ export class Edge {
                 : this.start.getBottomCenter();
         const endCoord =
             this.endPoint !== undefined ? this.end.LocalCoordToSceneCoord(this.endPoint) : this.end.getTopCenter();
-        const endDirection = direction(startCoord, endCoord);
-        const renderEnd = addCoord(endCoord, negate(mulCoord(endDirection, Edge.headLength + 4)));
-        const pathString = this.computePathString(startCoord, renderEnd, this.controlPoints);
+        const pathString = this.computePathString(startCoord, endCoord, this.controlPoints);
         this.path.plot(pathString);
         this.path.attr({ fill: "none" });
-        this.path.addClass("pyprince-simple-edge");
-        if (this.head != null) {
-            this.path.marker("end", this.head);
-        }
         return this;
     }
 
     private computePathString(startCoord: Coord, endCoord: Coord, cps: Coord[]): string {
-        const upDirection: Coord = { x: 0, y: -1 };
         let pathString = `M ${asString(startCoord)}`;
         for (const cp of cps) {
             pathString += ` L ${asString(cp)}`;
         }
-        pathString += ` S ${asString(addCoord(endCoord, upDirection))} ${asString(endCoord)}`;
+        pathString += ` L ${asString(endCoord)}`;
         return pathString;
     }
 

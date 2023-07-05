@@ -5,7 +5,7 @@ import "@svgdotjs/svg.panzoom.js";
 import SvgComplexContainer from "./svgElements/SvgComplexContainer";
 import { Coord, Point } from "./utils";
 import TextToSVG from "./TextToSvg";
-import { Point as SvgPoint } from "@svgdotjs/svg.js";
+import { Point as SvgPoint, Number as SvgNumber } from "@svgdotjs/svg.js";
 
 export interface CameraState {
     zoomLevel: number;
@@ -51,12 +51,16 @@ export class SvgVisualizationBuilder {
         for (const child of this.root.children()) {
             child.remove();
         }
+        for (const def in this.registeredDefs) {
+            this.registeredDefs[def].remove();
+        }
     }
 
     public registerDef(
         name: string,
         width: number,
         height: number,
+        orientation: "auto" | "auto-start-reverse" | number | SvgNumber,
         block?: ((marker: Marker) => void) | undefined
     ): Marker {
         if (name in this.registeredDefs) {
@@ -64,6 +68,7 @@ export class SvgVisualizationBuilder {
         }
         const defs = this.root.defs();
         const marker = defs.marker(width, height, block);
+        marker.orient(orientation);
         this.registeredDefs[name] = marker;
         return marker;
     }
