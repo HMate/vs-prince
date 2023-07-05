@@ -8,16 +8,6 @@ import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
 import { Coord, addCoord } from "./utils";
 
-/** TODO:
- * - Create an entrypoint if a node was moved, the edges are updated, but the nodes remain fixed.
- * - Draw parent nodes for the group nodes
- * - Feature: Draw node layers by module structure - modules in project | 3rd party library modules | standard modules
- *   - Also compound node for modules containing further files?
- * - Feature: User can choose a layout that is not compound
- * - Feature: Select nodes. Highlight them and their parents/children.
- * - Feature: Expandable and closable nodes/group nodes
- */
-
 export async function drawDependencies(
     baseBuilder: GraphVisualizationBuilder,
     descriptor: DependencyGraphDescriptor

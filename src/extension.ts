@@ -2,6 +2,14 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { PrinceClient } from "./PrinceClient";
 
+/** TODO - For release 0.1:
+ * - Reload tab contents after window is restarted
+ * - Remove Ctrl+D as default keybinding - add right click menu instead
+ * - Create package npm for pyprince
+ * - Create vscode package for vsc-prince
+ * - Fix pyprince to not run top level statements
+ */
+
 export function activate(context: vscode.ExtensionContext): void {
     let cachedPanel: vscode.WebviewPanel | null = null;
 
@@ -11,7 +19,6 @@ export function activate(context: vscode.ExtensionContext): void {
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         try {
             const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
-            // TODO: Clicking off from the tab, then on again reloads the contents of the tab. We should cache the last content instead.
             if (cachedPanel == null) {
                 const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
                 cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {

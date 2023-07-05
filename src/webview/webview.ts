@@ -8,6 +8,18 @@ import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from 
 import { drawDependencies } from "./DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "./WebviewStateHandler";
 
+/** TODO - future features:
+ * - Handle Ctrl+Z to undo last action - currently that is only node dragging
+ * - Create an entrypoint if a node was moved, the edges are updated, but the nodes remain fixed.
+ * - Draw parent nodes for the group nodes
+ * - Feature: Draw node layers by module structure - modules in project | 3rd party library modules | standard modules
+ *   - Also compound node for modules containing further files?
+ * - Feature: User can choose a layout that is not compound
+ * - Feature: Select nodes. Highlight them and their parents/children.
+ * - Feature: Expandable and closable nodes/group nodes
+ * - Feature: Save/Load diagrams to/from files.
+ */
+
 let baseBuilder: GraphVisualizationBuilder;
 let viewState!: WebviewStateHandler;
 
@@ -52,10 +64,6 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
         return;
     }
 
-    /** TODO:
-     * Handle Ctrl+Z to undo last action - currently that is only node dragging
-     */
-
     if (message.command === "draw-dependencies") {
         const descriptor = (message as DrawDependenciesMessage).data;
         await handleDrawDependenciesMessage(descriptor);
@@ -70,7 +78,6 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
 }
 
 function saveViewState(): void {
-    // TODO: Feature: Save/Load diagrams to/from files.
     viewState.setState({
         version: CURRENT_VIEW_STATE_VERSION,
         sceneData: baseBuilder.serialize(),
