@@ -25,6 +25,8 @@ export class Box {
     private shapeHolder: Rect;
     private nameHolder: Text;
 
+    private dragCallback?: (box: Box) => void;
+
     constructor(
         private readonly builder: GraphVisualizationBuilder,
         private tts: TextToSVG,
@@ -143,7 +145,12 @@ export class Box {
         group.draggable();
         const cb = (_event: MouseEvent) => {
             this.desc.centerPosition = { x: this.root.cx(), y: this.root.cy() };
+            this.dragCallback?.(this);
         };
         this.getRoot().on("dragmove.namespace", cb as EventListener);
+    }
+
+    public onMove(callback: (box: Box) => void): void {
+        this.dragCallback = callback;
     }
 }

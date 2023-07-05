@@ -33,6 +33,7 @@ export function entrypoint(mediaUri: string): void {
 function initVisualizationBuilder(svgId: string, tts: TextToSVG, viewState: WebviewStateHandler) {
     baseBuilder = new GraphVisualizationBuilder(svgId, tts);
     baseBuilder.initCamera(saveViewState);
+    baseBuilder.registerNodeMovementCallback(saveViewState);
 
     if (viewState.hasState()) {
         const state = viewState.getState();
@@ -51,6 +52,10 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
         return;
     }
 
+    /** TODO:
+     * Handle Ctrl+Z to undo last action - currently that is only node dragging
+     */
+
     if (message.command === "draw-dependencies") {
         const descriptor = (message as DrawDependenciesMessage).data;
         await handleDrawDependenciesMessage(descriptor);
@@ -66,7 +71,6 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
 
 function saveViewState(): void {
     // TODO: Feature: Save/Load diagrams to/from files.
-    // TODO: Also save after box/edge moves or changes
     viewState.setState({
         version: CURRENT_VIEW_STATE_VERSION,
         sceneData: baseBuilder.serialize(),

@@ -12,9 +12,18 @@ export interface GraphVisualizationDescription {
  * The class itself uses the SvgVisualizationBuilder class to build the graph elements from low-level svg elements. */
 export class GraphVisualizationBuilder extends SvgVisualizationBuilder {
     private graphElements = { boxes: new Array<Box>(), edges: new Array<Edge>() };
+    private nodeMovementCallback?: (builder: this) => void;
+
+    public registerNodeMovementCallback(callback: (builder: this) => void): void {
+        this.nodeMovementCallback = callback;
+    }
+
     public createBox(desc?: BoxDescription): Box {
         const box = new Box(this, this.tts, desc);
         this.graphElements.boxes.push(box);
+        box.onMove((_box: Box) => {
+            this.nodeMovementCallback?.(this);
+        });
         return box;
     }
 
