@@ -65,6 +65,7 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
 }
 
 function saveViewState(): void {
+    // TODO: Feature: Save/Load diagrams to/from files.
     // TODO: Also save after box/edge moves or changes
     viewState.setState({
         version: CURRENT_VIEW_STATE_VERSION,
