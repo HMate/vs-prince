@@ -16,12 +16,6 @@
                 "command": "vs-prince.visualize-py-deps",
                 "title": "VS-Prince: Visualize python dependencies"
             }
-        ],
-        "keybindings": [
-            {
-                "command": "vs-prince.visualize-py-deps",
-                "key": "ctrl+d"
-            }
         ]
     },
     "activationEvents": [

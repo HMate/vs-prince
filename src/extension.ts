@@ -4,7 +4,6 @@ import { WebviewSerializer } from "./WebviewSerializer";
 import { AppState } from "./AppState";
 
 /** TODO - For release 0.1:
- * - Remove Ctrl+D as default keybinding - add right click menu instead
  * - Create package npm for pyprince
  * - Create vscode package for vsc-prince
  * - Fix pyprince to not run top level statements
