@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
 import { PrinceClient } from "./PrinceClient";
+import { WebviewSerializer } from "./WebviewSerializer";
+import { AppState } from "./AppState";
 
 /** TODO - For release 0.1:
- * - Reload tab contents after window is restarted
  * - Remove Ctrl+D as default keybinding - add right click menu instead
  * - Create package npm for pyprince
  * - Create vscode package for vsc-prince
@@ -11,31 +11,26 @@ import { PrinceClient } from "./PrinceClient";
  */
 
 export function activate(context: vscode.ExtensionContext): void {
-    let cachedPanel: vscode.WebviewPanel | null = null;
+    const app = new AppState(context);
 
     const logChannel = vscode.window.createOutputChannel("VSPrince");
     logTerminal(logChannel, "Command vs-prince activated");
 
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         try {
-            const mediaUri = vscode.Uri.joinPath(context.extensionUri, "media");
-            if (cachedPanel == null) {
+            if (app.panel == null) {
                 const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
-                cachedPanel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
+                app.panel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
                     enableScripts: true,
-                    localResourceRoots: [mediaUri].concat(workspaceUris),
+                    localResourceRoots: [app.mediaUri].concat(workspaceUris),
                 });
 
-                updateViewHtml(cachedPanel, mediaUri);
+                app.initPanel();
 
-                cachedPanel.onDidDispose(() => {
-                    // Fired when user closes the webview tab.
-                    cachedPanel = null;
-                });
-                drawPythonDependencies(logChannel, cachedPanel);
+                drawPythonDependencies(logChannel, app.panel);
             } else {
-                cachedPanel.reveal(vscode.window.activeTextEditor?.viewColumn);
-                drawPythonDependencies(logChannel, cachedPanel);
+                app.panel.reveal(vscode.window.activeTextEditor?.viewColumn);
+                drawPythonDependencies(logChannel, app.panel);
             }
         } catch (error) {
             logTerminal(logChannel, `Prince py deps run into error: ${error}`);
@@ -44,6 +39,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
 
     context.subscriptions.push(disposable);
+    vscode.window.registerWebviewPanelSerializer("princeViz", new WebviewSerializer(app));
 }
 
 // this method is called when your extension is deactivated
@@ -79,29 +75,4 @@ function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.
 function logTerminal(channel: vscode.OutputChannel, message: string): void {
     // use date-fns package in future?
     channel.appendLine(`${new Date().toISOString()} - ` + message);
-}
-
-function updateViewHtml(panel: vscode.WebviewPanel, mediaUri: vscode.Uri) {
-    const webviewHtmlUri = vscode.Uri.joinPath(mediaUri, "index.html");
-    const mediaSrcPath = panel.webview.asWebviewUri(mediaUri);
-    console.log("Generating webview vs-prince");
-    panel.webview.html = getWebviewContent(panel.webview, webviewHtmlUri, mediaSrcPath);
-}
-
-function getWebviewContent(webview: vscode.Webview, htmlPath: vscode.Uri, mediaUri: vscode.Uri): string {
-    let contents = fs.readFileSync(htmlPath.fsPath, "utf-8");
-    contents = contents.replace(/\${webview.cspSource}/g, webview.cspSource);
-    contents = contents.replace(/\${mediaUri}/g, mediaUri.toString());
-    const nonce = getNonce();
-    contents = contents.replace(/\${nonce}/g, nonce);
-    return contents;
-}
-
-function getNonce(): string {
-    let text = "";
-    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }

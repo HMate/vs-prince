@@ -24,6 +24,9 @@
             }
         ]
     },
+    "activationEvents": [
+        "onWebviewPanel:princeViz"
+    ],
     "scripts": {
         "vscode:prepublish": "npm run package",
         "compile": "webpack --config ./build/webview.webpack.config.js && webpack --config ./build/node-extension.webpack.config.js",
