@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { PrinceClient } from "./PrinceClient";
+import { PyPrince } from "@mhidvegi/pyprince";
 import { WebviewSerializer } from "./WebviewSerializer";
 import { AppState } from "./AppState";
 
@@ -32,7 +32,11 @@ export function activate(context: vscode.ExtensionContext): void {
                 drawPythonDependencies(logChannel, app.panel);
             }
         } catch (error) {
-            logTerminal(logChannel, `Prince py deps run into error: ${error}`);
+            if (error instanceof Error) {
+                logTerminalRaw(logChannel, `Prince py deps run into error: ${error.stack}`);
+            } else {
+                logTerminal(logChannel, `Prince py deps run into error: ${error}`);
+            }
             vscode.window.showErrorMessage(`Prince py deps run into error: ${error}`);
         }
     });
@@ -54,13 +58,14 @@ function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.
         return;
     }
     logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
-    const result = PrinceClient.callPrince(editor.document.fileName, "--dm");
+    // TODO: Get active python env from vscode and pass it to PyPrince here
+    const result = new PyPrince().callPrince(editor.document.fileName, "--dm");
     let deps = {};
     try {
         deps = JSON.parse(result);
     } catch (error) {
         // TODO: pyprince should give back a structured response, not a simple string. Maybe create a local server?
-        logTerminal(logChannel, `Failed to parse json with error ${error}:\n${result}`);
+        logTerminalRaw(logChannel, `Failed to parse json with error ${error}:\n${result}\n`);
         vscode.window.showErrorMessage(`Prince py deps cannot handle pyprince result: ${error}`);
         return;
     }
@@ -69,6 +74,11 @@ function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.
     panel.webview.postMessage({ command: "draw-dependencies", data: deps });
 
     logTerminal(logChannel, "Finished drawing dependencies");
+}
+
+function logTerminalRaw(channel: vscode.OutputChannel, message: string): void {
+    // use date-fns package in future?
+    channel.append(`${new Date().toISOString()} - ` + message);
 }
 
 function logTerminal(channel: vscode.OutputChannel, message: string): void {
