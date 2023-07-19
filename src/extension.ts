@@ -3,17 +3,14 @@ import { PyPrince } from "@mhidvegi/pyprince";
 import { WebviewSerializer } from "./WebviewSerializer";
 import { AppState } from "./AppState";
 
-/** TODO - For release 0.1:
- * - Create package npm for pyprince
- * - Create vscode package for vsc-prince
- * - Fix pyprince to not run top level statements
- */
-
 export function activate(context: vscode.ExtensionContext): void {
     const app = new AppState(context);
 
     const logChannel = vscode.window.createOutputChannel("VSPrince");
     logTerminal(logChannel, "Command vs-prince activated");
+
+    // Consider implementing a custom editor for diagram file types?
+    // https://code.visualstudio.com/api/references/contribution-points#contributes.customEditors?
 
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
         try {
@@ -58,8 +55,10 @@ function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.
         return;
     }
     logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
-    // TODO: Get active python env from vscode and pass it to PyPrince here
-    const result = new PyPrince().callPrince(editor.document.fileName, "--dm");
+    // Get active python interpreter from vscode. That happens through the python extension.
+    const python = vscode.extensions.getExtension("ms-python.python");
+    const pythonEnv = python?.exports.settings.getExecutionDetails(editor.document.uri);
+    const result = new PyPrince(pythonEnv?.execCommand[0]).callPrince(editor.document.fileName, "--dm");
     let deps = {};
     try {
         deps = JSON.parse(result);
