@@ -9,11 +9,6 @@ if (args.length === 0) {
     return 0;
 }
 
-const pyprincePath = path.join(path.dirname(__dirname), "node_modules/@mhidvegi/pyprince/pyprince");
-const resultPath = path.join(args[0], "pyprince");
-if (fs.existsSync(resultPath)) {
-    console.log(`Remove ${resultPath}`);
-    fs.rmSync(resultPath, { recursive: true });
-}
-console.log(`Copy ${pyprincePath} to ${args[0]}`);
-fs.cpSync(pyprincePath, resultPath, { recursive: true, preserveTimestamps: true });
+const pyprincePath = path.join(path.dirname(__dirname), "node_modules/@mhidvegi/pyprince/pyprince.pyz");
+console.log(`Copy ${pyprincePath} to ${path.join(args[0], "pyprince.pyz")}`);
+fs.copyFileSync(pyprincePath, path.join(args[0], "pyprince.pyz"));

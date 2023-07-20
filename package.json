@@ -2,7 +2,7 @@
     "name": "vs-prince",
     "displayName": "vs-prince",
     "description": "Create diagrams from python code",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "publisher": "mhidvegi",
     "author": "Máté Hidvégi",
     "license": "ISC",
@@ -14,7 +14,7 @@
         "vscode": "^1.53.0"
     },
     "categories": [
-        "Other"
+        "Visualization"
     ],
     "main": "./dist/extension.js",
     "contributes": {
@@ -40,7 +40,7 @@
         "test": "ts-mocha src/test/suite/*.test.ts"
     },
     "devDependencies": {
-        "@mhidvegi/pyprince": "^0.0.1",
+        "@mhidvegi/pyprince": "^0.0.2",
         "@svgdotjs/svg.draggable.js": "^3.0.2",
         "@svgdotjs/svg.js": "~3.2.0",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
