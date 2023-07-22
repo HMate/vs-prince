@@ -9,6 +9,7 @@ import { drawDependencies } from "./DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "./WebviewStateHandler";
 
 /** TODO - future features:
+ * - Highlight node parents/children with different colors if node is selected
  * - Handle Ctrl+Z to undo last action - currently that is only node dragging
  * - Create an entrypoint if a node was moved, the edges are updated, but the nodes remain fixed.
  * - Draw parent nodes for the group nodes
