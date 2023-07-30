@@ -97,7 +97,7 @@ export class SvgVisualizationBuilder {
 
     /** Initializes the camera for the scene. The callback gets invoked after camera pan and zoom events */
     public initCamera(onCameraEventCallback?: (builder: this) => void): void {
-        this.root.panZoom({ zoomMin: 0.2, zoomMax: 2, zoomFactor: 0.1 });
+        this.root.panZoom({ zoomMin: 0.05, zoomMax: 2, zoomFactor: 0.1 });
         this.root.on("panEnd", (_ev: Event) => {
             onCameraEventCallback?.(this);
         });

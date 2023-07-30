@@ -140,7 +140,6 @@ async function drawDependenciesElk(
     });
 
     graph.edges?.forEach(function (edge: ElkExtendedEdge) {
-        console.log(edge.sections?.length);
         let localOrigin: Coord = { x: 0, y: 0 };
         if ((edge as any).container !== "root") {
             localOrigin = groupNodes[(edge as any).container];
