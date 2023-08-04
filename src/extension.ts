@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
+import { PythonExtension } from "@vscode/python-extension";
 import { PyPrince } from "@mhidvegi/pyprince";
+
 import { WebviewSerializer } from "./WebviewSerializer";
 import { AppState } from "./AppState";
 
@@ -12,7 +14,7 @@ export function activate(context: vscode.ExtensionContext): void {
     // Consider implementing a custom editor for diagram file types?
     // https://code.visualstudio.com/api/references/contribution-points#contributes.customEditors?
 
-    const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", () => {
+    const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", async () => {
         try {
             if (app.panel == null) {
                 const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
@@ -23,10 +25,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
                 app.initPanel();
 
-                drawPythonDependencies(logChannel, app.panel);
+                await drawPythonDependencies(logChannel, app.panel);
             } else {
                 app.panel.reveal(vscode.window.activeTextEditor?.viewColumn);
-                drawPythonDependencies(logChannel, app.panel);
+                await drawPythonDependencies(logChannel, app.panel);
             }
         } catch (error) {
             if (error instanceof Error) {
@@ -47,7 +49,7 @@ export function deactivate(): void {
     console.log("Command vs-prince deactivated");
 }
 
-function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): void {
+async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): Promise<void> {
     panel.webview.postMessage({ command: "show-loading" });
     const editor = vscode.window.activeTextEditor;
     if (editor == null) {
@@ -55,10 +57,11 @@ function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.
         return;
     }
     logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
-    // Get active python interpreter from vscode. That happens through the python extension.
-    const python = vscode.extensions.getExtension("ms-python.python");
-    const pythonEnv = python?.exports.settings.getExecutionDetails(editor.document.uri);
-    const result = new PyPrince(pythonEnv?.execCommand[0]).callPrince(editor.document.fileName, "--dm");
+    // Get active python interpreter from vscode python.
+    const pythonApi: PythonExtension = await PythonExtension.api();
+    const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
+    const pythonEnv = await pythonApi.environments.resolveEnvironment(pythonEnvPath);
+    const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(editor.document.fileName, "--dm");
     let deps = {};
     try {
         deps = JSON.parse(result);

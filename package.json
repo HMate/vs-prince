@@ -39,8 +39,11 @@
         "lint": "eslint src --ext ts",
         "test": "ts-mocha src/test/suite/*.test.ts"
     },
+    "extensionDependencies": [
+        "ms-python.python"
+    ],
     "devDependencies": {
-        "@mhidvegi/pyprince": "^0.0.2",
+        "@mhidvegi/pyprince": "^0.0.3",
         "@svgdotjs/svg.draggable.js": "^3.0.2",
         "@svgdotjs/svg.js": "~3.2.0",
         "@svgdotjs/svg.panzoom.js": "^2.1.2",
@@ -55,6 +58,7 @@
         "@types/webpack": "^4.41.26",
         "@typescript-eslint/eslint-plugin": "^4.15.0",
         "@typescript-eslint/parser": "^4.15.0",
+        "@vscode/python-extension": "^1.0.2",
         "chai": "^4.3.4",
         "clean-webpack-plugin": "^3.0.0",
         "copy-webpack-plugin": "^9.1.0",
