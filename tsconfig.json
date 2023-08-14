@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "moduleResolution": "node",
+        "module": "es2020",
+        "moduleResolution": "bundler",
         "target": "es2017",
         "outDir": "out",
-        "lib": ["es2020", "DOM"],
+        "lib": ["es2021", "DOM"],
         "sourceMap": true,
         "rootDir": "src",
         "strict": true /* enable all strict type-checking options */,

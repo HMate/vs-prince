@@ -26,7 +26,7 @@
     },
     "overrides": [
         {
-            "files": ["*.js"],
+            "files": ["*.js"], // For webpack.config.js build scripts
             "env": {
                 "node": true
             },

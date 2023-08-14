@@ -136,5 +136,3 @@ export default class TextToSVG {
         };
     }
 }
-
-module.exports = exports.default;

@@ -1,4 +1,5 @@
 import { Container, Rect, Text } from "@svgdotjs/svg.js";
+import "@svgdotjs/svg.draggable.js";
 
 import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
 import TextToSVG from "../TextToSvg";

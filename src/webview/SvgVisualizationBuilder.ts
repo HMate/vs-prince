@@ -28,7 +28,7 @@ export class SvgVisualizationBuilder {
             bodyRect != null ? { width: bodyRect.width, height: bodyRect.height } : { width: 1600, height: 1200 };
 
         this.root = SVG().addTo("body").size(windowSize.width, windowSize.height);
-        this.root.id(`#${rootId}`);
+        this.root.id(`${rootId}`);
         this.root.addClass(`${rootId}-root`);
         this.root.viewbox(0, 0, windowSize.width, windowSize.height);
         this.cameraProperties.zoomLevel = this.root.zoom();

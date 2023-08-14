@@ -1,4 +1,5 @@
 import elk, { ElkExtendedEdge, ElkNode } from "elkjs";
+import { Graphviz } from "@hpcc-js/wasm/graphviz";
 
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 import { DependencyGraphDescriptor } from "./extensionMessages";
@@ -12,47 +13,66 @@ export async function drawDependencies(
     baseBuilder: GraphVisualizationBuilder,
     descriptor: DependencyGraphDescriptor
 ): Promise<void> {
-    await drawDependenciesElk(baseBuilder, descriptor);
+    await drawDependenciesGraphViz(baseBuilder, descriptor);
 }
 
-function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descriptor: DependencyGraphDescriptor): void {
+async function drawDependenciesGraphViz(
+    baseBuilder: GraphVisualizationBuilder,
+    descriptor: DependencyGraphDescriptor
+): Promise<void> {
     if (baseBuilder == null) {
         return;
     }
+    const graphviz = await Graphviz.load();
+    const groupNodes: { [name: string]: Coord } = {};
+    const boxes: { [name: string]: Box } = {};
 
-    const graph = new Graph();
-
-    // create the boxes, because we need their sizes:
-    const boxes: { [name: NodeId]: Box } = {};
-    for (const node of descriptor.nodes) {
-        const b = baseBuilder.createBox({ name: node });
-        boxes[node] = b;
-        graph.addNode({ name: node, width: b.width(), height: b.height() / 2 });
+    function toDotName(name: string): string {
+        return name.replaceAll(".", "_");
     }
 
+    let dot = "digraph G { \n";
+    const pixelToInches = 1 / 96;
+    const inchToPixel = 96;
+    for (const node of descriptor.nodes) {
+        const b = baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
+        boxes[node] = b;
+        const width = b.width() * pixelToInches;
+        const height = b.height() * pixelToInches;
+        dot += `${toDotName(node)} [label="${node}" width=${width} height=${height}];\n`;
+    }
+    let edgeId = 0;
     for (const node in descriptor.edges) {
         if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
             const depList = descriptor.edges[node];
             for (const dep of depList) {
-                graph.addEdge({ start: node, end: dep });
+                const edgeName = `e${edgeId}__${toDotName(node)}__${toDotName(dep)}`;
+                dot += `${toDotName(node)} -> ${toDotName(dep)} [name=${edgeName}];\n`;
+                edgeId++;
             }
         }
     }
 
-    const layout = new GraphLayoutEngine();
-    const positions = layout.layoutCyclicTree(graph);
+    dot += "}";
 
-    positions.nodes().forEach((nodeId: NodeId) => {
-        const node = positions.nodePos(nodeId);
-        const b = boxes[nodeId];
-        b.moveCenter(node?.cx ?? 0, node?.cy ?? 0);
-    });
+    const layoutJson = graphviz.dot(dot, "json");
 
-    positions.edges().forEach((edge: EdgeId) => {
-        const pos = positions.edgePos(edge);
-        if (pos) {
-            baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
+    const gvLayout = JSON.parse(layoutJson);
+    gvLayout.objects?.forEach((v: any) => {
+        const b = boxes[v.label];
+        if (b == null) {
+            const parentX = v.x ?? 0;
+            const parentY = v.y ?? 0;
+            groupNodes[v.label] = { x: parentX, y: parentY };
+            // Key is for a compound group node
+            // v.children?.forEach((child) => {
+            //     const b = boxes[child.id];
+            //     b.moveCenter(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
+            // });
+            return;
         }
+        const pos = v.pos.split(",").map((s: string) => parseFloat(s));
+        b.moveCenter((pos[0] ?? 0) + b.width() / 2, (pos[1] ?? 0) + b.height() / 2);
     });
 }
 
@@ -71,7 +91,7 @@ async function drawDependenciesElk(
             "org.eclipse.elk.algorithm": "layered",
             "org.eclipse.elk.hierarchyHandling": "INCLUDE_CHILDREN",
             "org.eclipse.elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
-            "org.eclipse.elk.direction": "RIGHT" /*DOWN, RIGHT*/,
+            "org.eclipse.elk.direction": "RIGHT",
             "org.eclipse.elk.edgeRouting": "POLYLINE",
             "org.eclipse.elk.layered.feedbackEdges": "true",
             "org.eclipse.elk.layered.mergeEdges": "true",
@@ -153,6 +173,47 @@ async function drawDependenciesElk(
             addCoord(section.startPoint, localOrigin),
             addCoord(section.endPoint, localOrigin)
         );
+    });
+}
+
+function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descriptor: DependencyGraphDescriptor): void {
+    if (baseBuilder == null) {
+        return;
+    }
+
+    const graph = new Graph();
+
+    // create the boxes, because we need their sizes:
+    const boxes: { [name: NodeId]: Box } = {};
+    for (const node of descriptor.nodes) {
+        const b = baseBuilder.createBox({ name: node });
+        boxes[node] = b;
+        graph.addNode({ name: node, width: b.width(), height: b.height() / 2 });
+    }
+
+    for (const node in descriptor.edges) {
+        if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
+            const depList = descriptor.edges[node];
+            for (const dep of depList) {
+                graph.addEdge({ start: node, end: dep });
+            }
+        }
+    }
+
+    const layout = new GraphLayoutEngine();
+    const positions = layout.layoutCyclicTree(graph);
+
+    positions.nodes().forEach((nodeId: NodeId) => {
+        const node = positions.nodePos(nodeId);
+        const b = boxes[nodeId];
+        b.moveCenter(node?.cx ?? 0, node?.cy ?? 0);
+    });
+
+    positions.edges().forEach((edge: EdgeId) => {
+        const pos = positions.edgePos(edge);
+        if (pos) {
+            baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
+        }
     });
 }
 
