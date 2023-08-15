@@ -102,8 +102,18 @@ export class Box {
         return Number(this.shapeHolder.width());
     }
 
+    public setWidth(w: number): void {
+        this.desc.width = w;
+        this.shapeHolder.width(w);
+    }
+
     public height(): number {
         return Number(this.shapeHolder.height());
+    }
+
+    public setHeight(w: number): void {
+        this.desc.height = w;
+        this.shapeHolder.height(w);
     }
 
     public getTopCenter(): Coord {

@@ -31,9 +31,10 @@ async function drawDependenciesGraphViz(
         return name.replaceAll(".", "_");
     }
 
-    let dot = "digraph G { \n";
+    let dot = 'digraph G { \nnode [shape="box"]\n';
     const pixelToInches = 1 / 96;
     const inchToPixel = 96;
+    const pointsToPixel = 1.33;
     for (const node of descriptor.nodes) {
         const b = baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
         boxes[node] = b;
@@ -55,9 +56,12 @@ async function drawDependenciesGraphViz(
 
     dot += "}";
 
-    const layoutJson = graphviz.dot(dot, "json");
+    // const svg = graphviz.dot(dot, "svg");
+    // document.getElementById("prince-svg")!.innerHTML += svg;
 
+    const layoutJson = graphviz.dot(dot, "json");
     const gvLayout = JSON.parse(layoutJson);
+
     gvLayout.objects?.forEach((v: any) => {
         const b = boxes[v.label];
         if (b == null) {
@@ -71,8 +75,11 @@ async function drawDependenciesGraphViz(
             // });
             return;
         }
-        const pos = v.pos.split(",").map((s: string) => parseFloat(s));
-        b.moveCenter((pos[0] ?? 0) + b.width() / 2, (pos[1] ?? 0) + b.height() / 2);
+        // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
+        const pos = v.pos.split(",").map((s: string) => parseFloat(s) * pointsToPixel);
+        b.setWidth(parseFloat(v.width) * inchToPixel);
+        b.setHeight(parseFloat(v.height) * inchToPixel);
+        b.moveCenter((pos[0] ?? 0) + b.width() / 2, 400 - (pos[1] ?? 0) - b.height() / 2); // TODO: 400 is magic const for viewport height
     });
 }
 
