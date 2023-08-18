@@ -31,7 +31,9 @@ async function drawDependenciesGraphViz(
         return name.replaceAll(".", "_");
     }
 
-    let dot = 'digraph G { \nnode [shape="box"]\n';
+    let dot = "digraph G { \n";
+    dot += 'node [shape="box"]\n';
+    dot += "rankdir=LR\n";
     const pixelToInches = 1 / 96;
     const inchToPixel = 96;
     const pointsToPixel = 1.33;
@@ -107,6 +109,7 @@ async function drawDependenciesGraphViz(
         const edgePointsOption = findPointListField(edge["_draw_"], "b");
         const arrowPointsOption = findPointListField(edge["_hdraw_"], "p");
         let cps: Array<Coord> = [];
+        // TODO: Points here are for bspline path. So implement bspline for edge
         if (edgePointsOption && "points" in edgePointsOption) {
             cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
                 mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
