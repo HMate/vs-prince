@@ -7,7 +7,7 @@ import { Box } from "./graphVisualizationElements/Box";
 import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
-import { Coord, addCoord } from "./utils";
+import { Coord, addCoord, mulCoord } from "./utils";
 
 export async function drawDependencies(
     baseBuilder: GraphVisualizationBuilder,
@@ -55,12 +55,16 @@ async function drawDependenciesGraphViz(
     }
 
     dot += "}";
+    // console.log(dot);
 
     // const svg = graphviz.dot(dot, "svg");
     // document.getElementById("prince-svg")!.innerHTML += svg;
 
     const layoutJson = graphviz.dot(dot, "json");
     const gvLayout = JSON.parse(layoutJson);
+    const nodeIds: { [id: number]: string } = {};
+
+    const origoY: number = gvLayout["bb"]?.split(",")[3];
 
     gvLayout.objects?.forEach((v: any) => {
         const b = boxes[v.label];
@@ -75,11 +79,48 @@ async function drawDependenciesGraphViz(
             // });
             return;
         }
+        nodeIds[v._gvid] = v.label;
         // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
         const pos = v.pos.split(",").map((s: string) => parseFloat(s) * pointsToPixel);
         b.setWidth(parseFloat(v.width) * inchToPixel);
         b.setHeight(parseFloat(v.height) * inchToPixel);
-        b.moveCenter((pos[0] ?? 0) + b.width() / 2, 400 - (pos[1] ?? 0) - b.height() / 2); // TODO: 400 is magic const for viewport height
+        b.moveCenter(pos[0] ?? 0, origoY * pointsToPixel - (pos[1] ?? 0));
+    });
+
+    const findPointListField = (ar: Array<{ ["op"]: string }>, opCode: string) => {
+        for (const option of ar) {
+            if (option.op === opCode || option.op === opCode.toUpperCase()) {
+                return option;
+            }
+        }
+        return undefined;
+    };
+
+    gvLayout.edges?.forEach((edge: any) => {
+        const startNode = nodeIds[edge.tail];
+        const endNode = nodeIds[edge.head];
+        if (startNode == null || endNode == null) {
+            console.warn(`Did not find node ending [${edge.tail} ${edge.head}] for edge ${edge.name}`);
+            return;
+        }
+
+        const edgePointsOption = findPointListField(edge["_draw_"], "b");
+        const arrowPointsOption = findPointListField(edge["_hdraw_"], "p");
+        let cps: Array<Coord> = [];
+        if (edgePointsOption && "points" in edgePointsOption) {
+            cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
+                mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
+            );
+        }
+        if (arrowPointsOption && "points" in arrowPointsOption) {
+            const arrowCps = (arrowPointsOption!.points as Array<[number, number]>).map((p) =>
+                mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
+            );
+            cps.push(arrowCps[1]);
+        }
+        if (cps.length >= 3) {
+            baseBuilder.createEdge(boxes[startNode], boxes[endNode], cps.slice(1, -1), cps[0], cps[cps.length - 1]);
+        }
     });
 }
 
