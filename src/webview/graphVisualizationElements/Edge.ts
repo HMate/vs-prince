@@ -91,9 +91,9 @@ export class Edge {
             this.endPoint !== undefined ? this.end.LocalCoordToSceneCoord(this.endPoint) : this.end.getTopCenter();
         let pathString: string;
         if (!this.isBSpline) {
-            pathString = this.computeBSplinePath(startCoord, endCoord, this.controlPoints);
-        } else {
             pathString = this.computePathString(startCoord, endCoord, this.controlPoints);
+        } else {
+            pathString = this.computeBSplinePath(startCoord, endCoord, this.controlPoints);
         }
         this.path.plot(pathString);
         this.path.attr({ fill: "none" });

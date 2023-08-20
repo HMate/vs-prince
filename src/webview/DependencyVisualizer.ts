@@ -109,7 +109,7 @@ async function drawDependenciesGraphViz(
         const edgePointsOption = findPointListField(edge["_draw_"], "b");
         const arrowPointsOption = findPointListField(edge["_hdraw_"], "p");
         let cps: Array<Coord> = [];
-        // TODO: Points here are for bspline path. So implement bspline for edge
+
         if (edgePointsOption && "points" in edgePointsOption) {
             cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
                 mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
@@ -122,7 +122,14 @@ async function drawDependenciesGraphViz(
             cps.push(arrowCps[1]);
         }
         if (cps.length >= 3) {
-            baseBuilder.createEdge(boxes[startNode], boxes[endNode], cps.slice(1, -1), cps[0], cps[cps.length - 1]);
+            baseBuilder.createEdge(
+                boxes[startNode],
+                boxes[endNode],
+                cps.slice(1, -1),
+                cps[0],
+                cps[cps.length - 1],
+                true
+            );
         }
     });
 }
