@@ -3,10 +3,12 @@ import { Coord, asString } from "../utils";
 import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
 import { Box } from "./Box";
 import { NodeId } from "../graph/Graph";
+import { BSpline } from "../spline/BSpline";
 
 export interface EdgeDescription {
     start: NodeId;
     end: NodeId;
+    isBSpline: boolean;
     controlPoints: Coord[];
     startPoint?: Coord;
     endPoint?: Coord;
@@ -24,7 +26,8 @@ export class Edge {
         private end: Box,
         private controlPoints: Coord[] = [],
         private startPoint?: Coord,
-        private endPoint?: Coord
+        private endPoint?: Coord,
+        private readonly isBSpline?: boolean
     ) {
         this.path = this.builder.root.path();
 
@@ -40,6 +43,7 @@ export class Edge {
         this.desc = {
             start: this.start.name(),
             end: this.end.name(),
+            isBSpline: !!this.isBSpline,
             controlPoints: this.controlPoints,
             startPoint: this.startPoint,
             endPoint: this.endPoint,
@@ -85,7 +89,12 @@ export class Edge {
                 : this.start.getBottomCenter();
         const endCoord =
             this.endPoint !== undefined ? this.end.LocalCoordToSceneCoord(this.endPoint) : this.end.getTopCenter();
-        const pathString = this.computePathString(startCoord, endCoord, this.controlPoints);
+        let pathString: string;
+        if (!this.isBSpline) {
+            pathString = this.computeBSplinePath(startCoord, endCoord, this.controlPoints);
+        } else {
+            pathString = this.computePathString(startCoord, endCoord, this.controlPoints);
+        }
         this.path.plot(pathString);
         this.path.attr({ fill: "none" });
         return this;
@@ -98,6 +107,23 @@ export class Edge {
         }
         pathString += ` L ${asString(endCoord)}`;
         return pathString;
+    }
+
+    private computeBSplinePath(startCoord: Coord, endCoord: Coord, cps: Coord[]): string {
+        const controlPoints = [startCoord].concat(cps).concat([endCoord]);
+        const spline = new BSpline(controlPoints);
+        const bezierCps = spline.calculateCubicBezierPoints();
+
+        let path = `M ${bezierCps[0].x} ${bezierCps[0].y}`;
+
+        for (let i = 1; i < bezierCps.length; i += 3) {
+            const p1 = bezierCps[i];
+            const p2 = bezierCps[i + 1];
+            const p3 = bezierCps[i + 2];
+            path += ` C ${p1.x} ${p1.y}, ${p2.x} ${p2.y}, ${p3.x} ${p3.y}`;
+        }
+
+        return path;
     }
 
     private addMovementHandlers() {

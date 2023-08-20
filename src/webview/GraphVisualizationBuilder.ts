@@ -27,8 +27,15 @@ export class GraphVisualizationBuilder extends SvgVisualizationBuilder {
         return box;
     }
 
-    public createEdge(start: Box, end: Box, controlPoints: Coord[] = [], startPoint?: Coord, endPoint?: Coord): Edge {
-        const edge = new Edge(this, start, end, controlPoints, startPoint, endPoint);
+    public createEdge(
+        start: Box,
+        end: Box,
+        controlPoints: Coord[] = [],
+        startPoint?: Coord,
+        endPoint?: Coord,
+        isBSpline = false
+    ): Edge {
+        const edge = new Edge(this, start, end, controlPoints, startPoint, endPoint, isBSpline);
         this.graphElements.edges.push(edge);
         return edge;
     }

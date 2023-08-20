@@ -127,7 +127,7 @@ async function drawDependenciesGraphViz(
     });
 }
 
-async function drawDependenciesElk(
+async function _drawDependenciesElk(
     baseBuilder: GraphVisualizationBuilder,
     descriptor: DependencyGraphDescriptor
 ): Promise<void> {

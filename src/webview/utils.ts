@@ -44,6 +44,10 @@ export function diffCoord(start: Coord, end: Coord): Coord {
     return { x: end.x - start.x, y: end.y - start.y };
 }
 
+export function interpCoord(start: Coord, end: Coord, t: number): Coord {
+    return { x: start.x + t * (end.x - start.x), y: start.y + t * (end.y - start.y) };
+}
+
 export function direction(start: Coord, end: Coord): Coord {
     const d = diffCoord(start, end);
     const magn = Math.sqrt(d.x * d.x + d.y * d.y);
