@@ -57,6 +57,7 @@ async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: v
         return;
     }
     logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
+    const start = performance.now();
     // Get active python interpreter from vscode python.
     const pythonApi: PythonExtension = await PythonExtension.api();
     const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
@@ -72,7 +73,11 @@ async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: v
         return;
     }
 
-    logTerminal(logChannel, `Sending draw-dependencies for ${editor.document.fileName}`);
+    const end = performance.now();
+    logTerminal(
+        logChannel,
+        `Sending draw-dependencies for ${editor.document.fileName}, parsing took ${end - start} ms`
+    );
     panel.webview.postMessage({ command: "draw-dependencies", data: deps });
 
     logTerminal(logChannel, "Finished drawing dependencies");

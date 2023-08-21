@@ -31,7 +31,12 @@ async function drawDependenciesGraphViz(
         return name.replaceAll(".", "_");
     }
 
+    console.time("Time GraphVizBuild");
     let dot = "digraph G { \n";
+    dot += "compound=true;\n";
+    dot += "splines=ortho\n";
+    dot += "nodesep=0.02\n";
+    dot += "ranksep=0.04\n";
     dot += 'node [shape="box"]\n';
     dot += "rankdir=LR\n";
     const pixelToInches = 1 / 96;
@@ -58,16 +63,24 @@ async function drawDependenciesGraphViz(
 
     dot += "}";
     // console.log(dot);
+    console.timeEnd("Time GraphVizBuild");
 
     // const svg = graphviz.dot(dot, "svg");
     // document.getElementById("prince-svg")!.innerHTML += svg;
 
+    console.time("Time GraphVizDotLayout");
     const layoutJson = graphviz.dot(dot, "json");
+    console.timeEnd("Time GraphVizDotLayout");
+    console.time("Time GraphVizParse");
     const gvLayout = JSON.parse(layoutJson);
+    console.timeEnd("Time GraphVizParse");
+    console.log(gvLayout);
     const nodeIds: { [id: number]: string } = {};
 
     const origoY: number = gvLayout["bb"]?.split(",")[3];
 
+    console.time("Time GraphVizDraw");
+    console.time("Time GraphVizDrawNodes");
     gvLayout.objects?.forEach((v: any) => {
         const b = boxes[v.label];
         if (b == null) {
@@ -88,8 +101,13 @@ async function drawDependenciesGraphViz(
         b.setHeight(parseFloat(v.height) * inchToPixel);
         b.moveCenter(pos[0] ?? 0, origoY * pointsToPixel - (pos[1] ?? 0));
     });
+    console.timeEnd("Time GraphVizDrawNodes");
 
-    const findPointListField = (ar: Array<{ ["op"]: string }>, opCode: string) => {
+    console.time("Time GraphVizDrawEdges");
+    const findPointListField = (ar: Array<{ ["op"]: string }> | undefined, opCode: string) => {
+        if (ar == null) {
+            return undefined;
+        }
         for (const option of ar) {
             if (option.op === opCode || option.op === opCode.toUpperCase()) {
                 return option;
@@ -128,10 +146,12 @@ async function drawDependenciesGraphViz(
                 cps.slice(1, -1),
                 cps[0],
                 cps[cps.length - 1],
-                true
+                false
             );
         }
     });
+    console.timeEnd("Time GraphVizDrawEdges");
+    console.timeEnd("Time GraphVizDraw");
 }
 
 async function _drawDependenciesElk(

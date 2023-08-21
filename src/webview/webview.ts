@@ -67,9 +67,13 @@ export async function onExtensionMessage(message: BaseMessage): Promise<void> {
 
     if (message.command === "draw-dependencies") {
         const descriptor = (message as DrawDependenciesMessage).data;
+        console.time("Time DrawDependencies");
         await handleDrawDependenciesMessage(descriptor);
+        console.timeEnd("Time DrawDependencies");
+        console.time("Time SaveViewState");
         hideLoadingElement();
         saveViewState();
+        console.timeEnd("Time SaveViewState");
     } else if (message.command === "show-loading") {
         showLoadingElement();
         viewState.clearState();
