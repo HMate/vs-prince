@@ -2,7 +2,7 @@
     "name": "vs-prince",
     "displayName": "vs-prince",
     "description": "Create diagrams from python code",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "publisher": "mhidvegi",
     "author": "Máté Hidvégi",
     "license": "ISC",
