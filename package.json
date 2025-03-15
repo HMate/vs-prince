@@ -37,6 +37,7 @@
         "compile": "npm run compileWebView && npm run compileDevExtension",
         "nodemon": "nodemon --delay 3 --exec npm run compile",
         "package": "npm run compileWebView && npm run compileProductionExtension",
+        "py-link": "npm link @mhidvegi/pyprince",
         "lint": "eslint src --ext ts",
         "test": "ts-mocha src/test/suite/*.test.ts"
     },

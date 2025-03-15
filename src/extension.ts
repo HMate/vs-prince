@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import path from "path";
 import { PythonExtension } from "@vscode/python-extension";
 import { PyPrince } from "@mhidvegi/pyprince";
 
@@ -53,16 +54,25 @@ async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: v
     panel.webview.postMessage({ command: "show-loading" });
     const editor = vscode.window.activeTextEditor;
     if (editor == null) {
-        vscode.window.showInformationMessage("No file selected to show dependencies for");
+        vscode.window.showInformationMessage("No active editor selected to show dependencies for.");
         return;
     }
     logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
     const start = performance.now();
-    // Get active python interpreter from vscode python.
-    const pythonApi: PythonExtension = await PythonExtension.api();
-    const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
-    const pythonEnv = await pythonApi.environments.resolveEnvironment(pythonEnvPath);
-    const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(editor.document.fileName, "--dm");
+
+    const workspaces = vscode.workspace.workspaceFolders;
+    if (!isValidfWorkspace(workspaces)) {
+        return;
+    }
+
+    const cachePath = findPyprinceCachePath(workspaces, logChannel);
+    const pythonEnv = await getPythonEnv(editor);
+    const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(
+        editor.document.fileName,
+        "--dm",
+        "--cache",
+        cachePath
+    );
     let deps = {};
     try {
         deps = JSON.parse(result);
@@ -80,7 +90,32 @@ async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: v
     );
     panel.webview.postMessage({ command: "draw-dependencies", data: deps });
 
-    logTerminal(logChannel, "Finished drawing dependencies");
+    logTerminal(logChannel, "Finished collecting dependencies, and sent them to webview");
+}
+
+function isValidfWorkspace(
+    workspaces: readonly vscode.WorkspaceFolder[] | undefined
+): workspaces is vscode.WorkspaceFolder[] {
+    if (workspaces == null) {
+        vscode.window.showWarningMessage("Must use a workspace for visualizing dependencies.");
+        return false;
+    }
+    return true;
+}
+
+function findPyprinceCachePath(workspaces: readonly vscode.WorkspaceFolder[], logChannel: vscode.OutputChannel) {
+    const wsPath = workspaces[0].uri.fsPath;
+    const cachePath = path.join(wsPath, ".pyprince/cache.json");
+    logTerminal(logChannel, `Using workspace cache ${cachePath}`);
+    return cachePath;
+}
+
+async function getPythonEnv(editor: vscode.TextEditor) {
+    // Get active python interpreter from vscode python.
+    const pythonApi: PythonExtension = await PythonExtension.api();
+    const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
+    const pythonEnv = await pythonApi.environments.resolveEnvironment(pythonEnvPath);
+    return pythonEnv;
 }
 
 function logTerminalRaw(channel: vscode.OutputChannel, message: string): void {
