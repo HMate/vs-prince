@@ -1,16 +1,17 @@
 import * as vscode from "vscode";
-import path from "path";
-import { PythonExtension } from "@vscode/python-extension";
-import { PyPrince } from "@mhidvegi/pyprince";
 
 import { WebviewSerializer } from "./WebviewSerializer";
 import { AppState } from "./AppState";
+import { Logger } from "./Logger";
+import { PythonController } from "./PythonController";
 
 export function activate(context: vscode.ExtensionContext): void {
     const app = new AppState(context);
 
-    const logChannel = vscode.window.createOutputChannel("VSPrince");
-    logTerminal(logChannel, "Command vs-prince activated");
+    const logger = new Logger("VSPrince");
+    logger.log("Command vs-prince activated");
+
+    const pythonController = new PythonController(logger);
 
     // Consider implementing a custom editor for diagram file types?
     // https://code.visualstudio.com/api/references/contribution-points#contributes.customEditors?
@@ -26,16 +27,16 @@ export function activate(context: vscode.ExtensionContext): void {
 
                 app.initPanel();
 
-                await drawPythonDependencies(logChannel, app.panel);
+                await pythonController.drawPythonDependencies(app.panel);
             } else {
                 app.panel.reveal(vscode.window.activeTextEditor?.viewColumn);
-                await drawPythonDependencies(logChannel, app.panel);
+                await pythonController.drawPythonDependencies(app.panel);
             }
         } catch (error) {
             if (error instanceof Error) {
-                logTerminalRaw(logChannel, `Prince py deps run into error: ${error.stack}`);
+                logger.logRaw(`Prince py deps run into error: ${error.stack}`);
             } else {
-                logTerminal(logChannel, `Prince py deps run into error: ${error}`);
+                logger.log(`Prince py deps run into error: ${error}`);
             }
             vscode.window.showErrorMessage(`Prince py deps run into error: ${error}`);
         }
@@ -48,82 +49,4 @@ export function activate(context: vscode.ExtensionContext): void {
 // this method is called when your extension is deactivated
 export function deactivate(): void {
     console.log("Command vs-prince deactivated");
-}
-
-async function drawPythonDependencies(logChannel: vscode.OutputChannel, panel: vscode.WebviewPanel): Promise<void> {
-    panel.webview.postMessage({ command: "show-loading" });
-    const editor = vscode.window.activeTextEditor;
-    if (editor == null) {
-        vscode.window.showInformationMessage("No active editor selected to show dependencies for.");
-        return;
-    }
-    logTerminal(logChannel, `Start drawing dependencies for ${editor.document.fileName}`);
-    const start = performance.now();
-
-    const workspaces = vscode.workspace.workspaceFolders;
-    if (!isValidfWorkspace(workspaces)) {
-        return;
-    }
-
-    const cachePath = findPyprinceCachePath(workspaces, logChannel);
-    const pythonEnv = await getPythonEnv(editor);
-    const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(
-        editor.document.fileName,
-        "--dm",
-        "--cache",
-        cachePath
-    );
-    let deps = {};
-    try {
-        deps = JSON.parse(result);
-    } catch (error) {
-        // TODO: pyprince should give back a structured response, not a simple string. Maybe create a local server?
-        logTerminalRaw(logChannel, `Failed to parse json with error ${error}:\n${result}\n`);
-        vscode.window.showErrorMessage(`Prince py deps cannot handle pyprince result: ${error}`);
-        return;
-    }
-
-    const end = performance.now();
-    logTerminal(
-        logChannel,
-        `Sending draw-dependencies for ${editor.document.fileName}, parsing took ${end - start} ms`
-    );
-    panel.webview.postMessage({ command: "draw-dependencies", data: deps });
-
-    logTerminal(logChannel, "Finished collecting dependencies, and sent them to webview");
-}
-
-function isValidfWorkspace(
-    workspaces: readonly vscode.WorkspaceFolder[] | undefined
-): workspaces is vscode.WorkspaceFolder[] {
-    if (workspaces == null) {
-        vscode.window.showWarningMessage("Must use a workspace for visualizing dependencies.");
-        return false;
-    }
-    return true;
-}
-
-function findPyprinceCachePath(workspaces: readonly vscode.WorkspaceFolder[], logChannel: vscode.OutputChannel) {
-    const wsPath = workspaces[0].uri.fsPath;
-    const cachePath = path.join(wsPath, ".pyprince/cache.json");
-    logTerminal(logChannel, `Using workspace cache ${cachePath}`);
-    return cachePath;
-}
-
-async function getPythonEnv(editor: vscode.TextEditor) {
-    // Get active python interpreter from vscode python.
-    const pythonApi: PythonExtension = await PythonExtension.api();
-    const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
-    const pythonEnv = await pythonApi.environments.resolveEnvironment(pythonEnvPath);
-    return pythonEnv;
-}
-
-function logTerminalRaw(channel: vscode.OutputChannel, message: string): void {
-    // use date-fns package in future?
-    channel.append(`${new Date().toISOString()} - ` + message);
-}
-
-function logTerminal(channel: vscode.OutputChannel, message: string): void {
-    // use date-fns package in future?
-    channel.appendLine(`${new Date().toISOString()} - ` + message);
 }

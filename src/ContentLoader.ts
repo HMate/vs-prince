@@ -1,12 +1,14 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 
+import { Logger } from "./Logger";
+
 /** Loads and updates the html content of webviews */
 export class ContentLoader {
     public static updateViewHtml(panel: vscode.WebviewPanel, mediaUri: vscode.Uri): void {
         const webviewHtmlUri = vscode.Uri.joinPath(mediaUri, "index.html");
         const mediaSrcPath = panel.webview.asWebviewUri(mediaUri);
-        console.log("Generating webview vs-prince");
+        Logger.logDevConsole("Generating webview vs-prince");
         panel.webview.html = this.loadWebviewContent(panel.webview, webviewHtmlUri, mediaSrcPath);
     }
 
