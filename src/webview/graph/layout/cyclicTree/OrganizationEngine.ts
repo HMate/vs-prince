@@ -1,4 +1,4 @@
-import { Graph, NodeId } from "../Graph";
+import { Graph, NodeId } from "../../Graph";
 
 export class OrganizationEngine {
     /** Logical positions calculation for cyclic tree graphs */

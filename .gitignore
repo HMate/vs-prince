@@ -5,4 +5,4 @@ node_modules
 .vscode-test/
 *.vsix
 
-docs/*
+docs/graph_cycles.png

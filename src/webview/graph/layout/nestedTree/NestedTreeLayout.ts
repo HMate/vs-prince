@@ -1,5 +1,5 @@
-import { Graph, GraphNode, GraphEdge, NodeId } from "./Graph";
-import { OrganizationEngine, OrganizationalLayers } from "./cyclicTreeGraph/OrganizationEngine";
+import { Graph, GraphNode, GraphEdge, NodeId } from "../../Graph";
+import { OrganizationEngine, OrganizationalLayers } from "../cyclicTree/OrganizationEngine";
 
 export type GraphId = string;
 export type GraphDictionary = { [id: GraphId]: Graph };
@@ -36,9 +36,13 @@ export class NestedGraph extends Graph {
     }
 }
 
-export class NestedGraphLayoutEngine {
+export class NestedTreeLayout {
+    public arrange(_graph: Graph): void {
+        throw new Error("Not Implemented");
+    }
+
     public static assignSubGraphGroups(graph: Graph): NestedGraph {
-        /* Finding groups.
+        /* Finding groups. This algorithm aims to extract node groups automatically from a cyclic graph based on cycles.
         Algo to determine group: 
         BFS on nodes:
         - If a node has a single parent, they are in the same group.
@@ -46,7 +50,14 @@ export class NestedGraphLayoutEngine {
         - If a node has multiple parents, and there are any within different groups, then the node is in a 3rd group.
         Create subgroups? - If two nodes depend on each other, they could be moved to the same group, but in different subgroups?
         - Queue nodes for next BFS candidate until all their parents have a group.
-        - If there is no such node, select one that we already seen. They are automatically asigned to a new group
+        - If there is no such node, select one that we already seen. They are automatically asigned to a new group        
+
+        Layout:
+        Inside groups layout nodes as in layoutCyclicTree.
+        
+        Edge concretization:
+        Inside groups edges are straight, or splines to avoid nodes.
+        Between groups, edges from same source group are fitted together and run in parallel to target group.
          */
         const result: NestedGraph = new NestedGraph();
 
@@ -61,7 +72,7 @@ export class NestedGraphLayoutEngine {
                 throw new Error(`Node ${nodeId} not found in graph`);
             }
             // TODO: there should be one node here on the first layer for dependency graphs,
-            // but technically its possible to have more. THose may be in different groups. Handle that case if neecessary.
+            // but technically its possible to have more. Those may be in different groups. Handle that case if neecessary.
             result.addNodeToGroup(node, `${latestGroup}`);
         }
         latestGroup += 1;

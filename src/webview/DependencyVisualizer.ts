@@ -6,105 +6,171 @@ import { DependencyGraphDescriptor } from "./extensionMessages";
 import { Box } from "./graphVisualizationElements/Box";
 import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
-import { NestedGraph, NestedGraphLayoutEngine } from "./graph/NestedGraphLayoutEngine";
+import { NestedGraph, NestedTreeLayout } from "./graph/layout/nestedTree/NestedTreeLayout";
 import { Coord, addCoord, mulCoord } from "./utils";
 
 export async function drawDependencies(
     baseBuilder: GraphVisualizationBuilder,
     descriptor: DependencyGraphDescriptor
 ): Promise<void> {
-    await drawDependenciesGraphViz(baseBuilder, descriptor);
+    await new GraphVizDiagramBuilder(baseBuilder).createDiagram(descriptor);
 }
 
-async function drawDependenciesGraphViz(
-    baseBuilder: GraphVisualizationBuilder,
-    descriptor: DependencyGraphDescriptor
-): Promise<void> {
-    if (baseBuilder == null) {
-        return;
-    }
-    const graphviz = await Graphviz.load();
-    const groupNodes: { [name: string]: Coord } = {};
-    const boxes: { [name: string]: Box } = {};
+class GraphVizDiagramBuilder {
+    private readonly pixelToInches = 1 / 96;
+    private readonly inchToPixel = 96;
+    private readonly pointsToPixel = 1.33;
 
-    function toDotName(name: string): string {
+    private graphviz: Graphviz | undefined = undefined;
+    private readonly boxes: { [name: string]: Box } = {};
+    private edgeId = 0;
+    private nodeDotLines: Array<string> = [];
+    private edgeDotLines: Array<string> = [];
+
+    public constructor(private readonly baseBuilder: GraphVisualizationBuilder) {}
+
+    public async createDiagram(descriptor: DependencyGraphDescriptor): Promise<void> {
+        if (this.baseBuilder == null) {
+            return;
+        }
+        this.graphviz = await Graphviz.load();
+
+        console.time("Time GraphViz Build");
+
+        for (const node of descriptor.nodes) {
+            this.addNode(node);
+        }
+        for (const node in descriptor.edges) {
+            if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
+                const depList = descriptor.edges[node];
+                for (const dep of depList) {
+                    this.addEdge(node, dep);
+                }
+            }
+        }
+        const dot = this.createDotRepresentation();
+        console.timeEnd("Time GraphViz Build");
+
+        // const svg = graphviz.dot(dot, "svg");
+        // document.getElementById("prince-svg")!.innerHTML += svg;
+
+        console.time("Time GraphViz DotLayout");
+        const layoutJson = this.graphviz.dot(dot, "json");
+        console.timeEnd("Time GraphViz DotLayout");
+        console.time("Time GraphViz Parse");
+        const gvLayout = JSON.parse(layoutJson);
+        console.timeEnd("Time GraphViz Parse");
+        console.log(gvLayout);
+
+        console.time("Time GraphViz Draw");
+        this.moveElementsBasedOnLayout(gvLayout);
+        console.timeEnd("Time GraphViz Draw");
+    }
+
+    private addNode(node: string) {
+        const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
+        this.boxes[node] = b;
+        const width = b.width() * this.pixelToInches;
+        const height = b.height() * this.pixelToInches;
+        this.nodeDotLines.push(`${this.toDotName(node)} [label="${node}" width=${width} height=${height}];`);
+    }
+
+    private addEdge(startNode: string, endNode: string) {
+        const edgeName = `e${this.edgeId}__${this.toDotName(startNode)}__${this.toDotName(endNode)}`;
+        this.edgeDotLines.push(`${this.toDotName(startNode)} -> ${this.toDotName(endNode)} [name=${edgeName}];`);
+        this.edgeId++;
+    }
+
+    private toDotName(name: string): string {
         return name.replaceAll(".", "_");
     }
 
-    console.time("Time GraphVizBuild");
-    let dot = "digraph G { \n";
-    dot += "compound=true;\n";
-    dot += "splines=ortho\n";
-    dot += "nodesep=0.02\n";
-    dot += "ranksep=0.04\n";
-    dot += 'node [shape="box"]\n';
-    dot += "rankdir=LR\n";
-    const pixelToInches = 1 / 96;
-    const inchToPixel = 96;
-    const pointsToPixel = 1.33;
-    for (const node of descriptor.nodes) {
-        const b = baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
-        boxes[node] = b;
-        const width = b.width() * pixelToInches;
-        const height = b.height() * pixelToInches;
-        dot += `${toDotName(node)} [label="${node}" width=${width} height=${height}];\n`;
+    private createDotRepresentation(): string {
+        let dot = "digraph G { \n";
+        dot += "compound=true;\n";
+        dot += "splines=ortho\n";
+        dot += "nodesep=0.02\n";
+        dot += "ranksep=0.04\n";
+        dot += 'node [shape="box"]\n';
+        dot += "rankdir=LR\n";
+
+        dot += this.nodeDotLines.join("\n");
+        dot += this.edgeDotLines.join("\n");
+
+        dot += "}";
+        // console.log(dot);
+        return dot;
     }
-    let edgeId = 0;
-    for (const node in descriptor.edges) {
-        if (Object.prototype.hasOwnProperty.call(descriptor.edges, node)) {
-            const depList = descriptor.edges[node];
-            for (const dep of depList) {
-                const edgeName = `e${edgeId}__${toDotName(node)}__${toDotName(dep)}`;
-                dot += `${toDotName(node)} -> ${toDotName(dep)} [name=${edgeName}];\n`;
-                edgeId++;
+
+    private moveElementsBasedOnLayout(gvLayout: any) {
+        const nodeIds: { [id: number]: string } = {};
+        const groupNodes: { [name: string]: Coord } = {};
+        const origoY: number = gvLayout["bb"]?.split(",")[3];
+
+        gvLayout.objects?.forEach((v: any) => {
+            const b = this.boxes[v.label];
+            if (b == null) {
+                const parentX = v.x ?? 0;
+                const parentY = v.y ?? 0;
+                groupNodes[v.label] = { x: parentX, y: parentY };
+                // Key is for a compound group node
+                // v.children?.forEach((child) => {
+                //     const b = boxes[child.id];
+                //     b.moveCenter(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
+                // });
+                return;
             }
-        }
+            nodeIds[v._gvid] = v.label;
+            // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
+            const pos = v.pos.split(",").map((s: string) => parseFloat(s) * this.pointsToPixel);
+            b.setWidth(parseFloat(v.width) * this.inchToPixel);
+            b.setHeight(parseFloat(v.height) * this.inchToPixel);
+            b.moveCenter(pos[0] ?? 0, origoY * this.pointsToPixel - (pos[1] ?? 0));
+        });
+
+        gvLayout.edges?.forEach((edge: any) => {
+            const startNode = nodeIds[edge.tail];
+            const endNode = nodeIds[edge.head];
+            if (startNode == null || endNode == null) {
+                console.warn(`Did not find node ending [${edge.tail} ${edge.head}] for edge ${edge.name}`);
+                return;
+            }
+
+            const cps = this.collectEdgeControlPoints(edge, origoY);
+            if (cps.length >= 3) {
+                this.baseBuilder.createEdge(
+                    this.boxes[startNode],
+                    this.boxes[endNode],
+                    cps.slice(1, -1),
+                    cps[0],
+                    cps[cps.length - 1],
+                    false
+                );
+            }
+        });
     }
 
-    dot += "}";
-    // console.log(dot);
-    console.timeEnd("Time GraphVizBuild");
+    private collectEdgeControlPoints(edge: any, origoY: number): Array<Coord> {
+        let cps: Array<Coord> = [];
 
-    // const svg = graphviz.dot(dot, "svg");
-    // document.getElementById("prince-svg")!.innerHTML += svg;
+        const edgePointsOption = this.findPointListField(edge["_draw_"], "b");
+        const arrowPointsOption = this.findPointListField(edge["_hdraw_"], "p");
 
-    console.time("Time GraphVizDotLayout");
-    const layoutJson = graphviz.dot(dot, "json");
-    console.timeEnd("Time GraphVizDotLayout");
-    console.time("Time GraphVizParse");
-    const gvLayout = JSON.parse(layoutJson);
-    console.timeEnd("Time GraphVizParse");
-    console.log(gvLayout);
-    const nodeIds: { [id: number]: string } = {};
-
-    const origoY: number = gvLayout["bb"]?.split(",")[3];
-
-    console.time("Time GraphVizDraw");
-    console.time("Time GraphVizDrawNodes");
-    gvLayout.objects?.forEach((v: any) => {
-        const b = boxes[v.label];
-        if (b == null) {
-            const parentX = v.x ?? 0;
-            const parentY = v.y ?? 0;
-            groupNodes[v.label] = { x: parentX, y: parentY };
-            // Key is for a compound group node
-            // v.children?.forEach((child) => {
-            //     const b = boxes[child.id];
-            //     b.moveCenter(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
-            // });
-            return;
+        if (edgePointsOption && "points" in edgePointsOption) {
+            cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
+                mulCoord({ x: p[0], y: origoY - p[1] }, this.pointsToPixel)
+            );
         }
-        nodeIds[v._gvid] = v.label;
-        // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
-        const pos = v.pos.split(",").map((s: string) => parseFloat(s) * pointsToPixel);
-        b.setWidth(parseFloat(v.width) * inchToPixel);
-        b.setHeight(parseFloat(v.height) * inchToPixel);
-        b.moveCenter(pos[0] ?? 0, origoY * pointsToPixel - (pos[1] ?? 0));
-    });
-    console.timeEnd("Time GraphVizDrawNodes");
+        if (arrowPointsOption && "points" in arrowPointsOption) {
+            const arrowCps = (arrowPointsOption!.points as Array<[number, number]>).map((p) =>
+                mulCoord({ x: p[0], y: origoY - p[1] }, this.pointsToPixel)
+            );
+            cps.push(arrowCps[1]);
+        }
+        return cps;
+    }
 
-    console.time("Time GraphVizDrawEdges");
-    const findPointListField = (ar: Array<{ ["op"]: string }> | undefined, opCode: string) => {
+    private findPointListField(ar: Array<{ ["op"]: string }> | undefined, opCode: string) {
         if (ar == null) {
             return undefined;
         }
@@ -114,44 +180,7 @@ async function drawDependenciesGraphViz(
             }
         }
         return undefined;
-    };
-
-    gvLayout.edges?.forEach((edge: any) => {
-        const startNode = nodeIds[edge.tail];
-        const endNode = nodeIds[edge.head];
-        if (startNode == null || endNode == null) {
-            console.warn(`Did not find node ending [${edge.tail} ${edge.head}] for edge ${edge.name}`);
-            return;
-        }
-
-        const edgePointsOption = findPointListField(edge["_draw_"], "b");
-        const arrowPointsOption = findPointListField(edge["_hdraw_"], "p");
-        let cps: Array<Coord> = [];
-
-        if (edgePointsOption && "points" in edgePointsOption) {
-            cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
-                mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
-            );
-        }
-        if (arrowPointsOption && "points" in arrowPointsOption) {
-            const arrowCps = (arrowPointsOption!.points as Array<[number, number]>).map((p) =>
-                mulCoord({ x: p[0], y: origoY - p[1] }, pointsToPixel)
-            );
-            cps.push(arrowCps[1]);
-        }
-        if (cps.length >= 3) {
-            baseBuilder.createEdge(
-                boxes[startNode],
-                boxes[endNode],
-                cps.slice(1, -1),
-                cps[0],
-                cps[cps.length - 1],
-                false
-            );
-        }
-    });
-    console.timeEnd("Time GraphVizDrawEdges");
-    console.timeEnd("Time GraphVizDraw");
+    }
 }
 
 async function _drawDependenciesElk(
@@ -162,6 +191,7 @@ async function _drawDependenciesElk(
         return;
     }
 
+    console.time("Time ElkLayout CreateElements");
     const elkEngine = new elk();
     const g: ElkNode = {
         id: "root",
@@ -185,7 +215,7 @@ async function _drawDependenciesElk(
     }
 
     const myGraph = createGraphFromMessage(descriptor);
-    const compoundG: NestedGraph = NestedGraphLayoutEngine.assignSubGraphGroups(myGraph);
+    const compoundG: NestedGraph = NestedTreeLayout.assignSubGraphGroups(myGraph);
 
     for (const [graphId, graph] of Object.entries(compoundG.graphs)) {
         const compountNode: ElkNode = { id: graphId, children: [] };
@@ -211,7 +241,9 @@ async function _drawDependenciesElk(
             }
         }
     }
+    console.timeEnd("Time ElkLayout CreateElements");
 
+    console.time("Time ElkLayout DoLayout");
     let graph: ElkNode;
     try {
         graph = await elkEngine.layout(g);
@@ -219,7 +251,9 @@ async function _drawDependenciesElk(
         console.error(layoutError);
         return;
     }
+    console.timeEnd("Time ElkLayout DoLayout");
 
+    console.time("Time ElkLayout MoveElements");
     const groupNodes: { [name: string]: Coord } = {};
     graph.children?.forEach((v) => {
         if (boxes[v.id] == null) {
@@ -252,6 +286,7 @@ async function _drawDependenciesElk(
             addCoord(section.endPoint, localOrigin)
         );
     });
+    console.timeEnd("Time ElkLayout MoveElements");
 }
 
 function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descriptor: DependencyGraphDescriptor): void {
@@ -261,6 +296,7 @@ function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descrip
 
     const graph = new Graph();
 
+    console.time("Time CustomLayout CreateElements");
     // create the boxes, because we need their sizes:
     const boxes: { [name: NodeId]: Box } = {};
     for (const node of descriptor.nodes) {
@@ -277,10 +313,16 @@ function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descrip
             }
         }
     }
+    console.timeEnd("Time CustomLayout CreateElements");
+
+    console.time("Time CustomLayout DoLayout");
 
     const layout = new GraphLayoutEngine();
     const positions = layout.layoutCyclicTree(graph);
 
+    console.timeEnd("Time CustomLayout DoLayout");
+
+    console.time("Time CustomLayout MoveElements");
     positions.nodes().forEach((nodeId: NodeId) => {
         const node = positions.nodePos(nodeId);
         const b = boxes[nodeId];
@@ -293,6 +335,7 @@ function _drawDependenciesCustom(baseBuilder: GraphVisualizationBuilder, descrip
             baseBuilder.createEdge(boxes[pos.start], boxes[pos.end]);
         }
     });
+    console.timeEnd("Time CustomLayout MoveElements");
 }
 
 function createGraphFromMessage(descriptor: DependencyGraphDescriptor): Graph {

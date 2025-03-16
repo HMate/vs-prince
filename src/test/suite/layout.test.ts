@@ -1,13 +1,13 @@
 import { expect } from "chai";
 
-import { PrinceClient } from "../../PrinceClient";
+import { PyPrince } from "@mhidvegi/pyprince";
 import { Graph, ConcreteGraph } from "../../webview/graph/Graph";
 import { GraphLayoutEngine } from "../../webview/graph/GraphLayoutEngine";
 
 describe("Test full dependency layout", () => {
     describe("on parsed python dependencies", () => {
         const filename = "D:\\projects\\testing\\pylab\\main.py";
-        const result = PrinceClient.callPrince(filename, "--dm");
+        const result = new PyPrince("python").callPrince(filename, "--dm");
 
         const deps = JSON.parse(result);
         const graph = new Graph();
