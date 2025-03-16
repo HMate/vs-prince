@@ -19,7 +19,7 @@ export class PythonController {
         const start = performance.now();
 
         const workspaces = vscode.workspace.workspaceFolders;
-        if (!this.isValidfWorkspace(workspaces)) {
+        if (!this.isValidWorkspace(workspaces)) {
             return;
         }
 
@@ -48,7 +48,7 @@ export class PythonController {
         this.logger.log("Finished collecting dependencies, and sent them to webview");
     }
 
-    private isValidfWorkspace(
+    private isValidWorkspace(
         workspaces: readonly vscode.WorkspaceFolder[] | undefined
     ): workspaces is vscode.WorkspaceFolder[] {
         if (workspaces == null) {
