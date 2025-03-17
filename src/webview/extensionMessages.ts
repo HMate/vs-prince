@@ -5,6 +5,7 @@ export interface BaseMessage {
 export interface DependencyGraphDescriptor {
     nodes: Array<string>;
     edges: { [name: string]: Array<string> };
+    packages: { [name: string]: Array<string> };
 }
 
 export interface DrawDependenciesMessage extends BaseMessage {

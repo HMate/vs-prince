@@ -101,7 +101,7 @@ function hideLoadingElement(): void {
 
 async function handleDrawDependenciesMessage(descriptor: DependencyGraphDescriptor): Promise<void> {
     clearDiagram(baseBuilder);
-    await drawDependencies(baseBuilder, descriptor);
+    await drawDependencies(viewState, baseBuilder, descriptor);
 }
 
 function clearDiagram(baseBuilder: GraphVisualizationBuilder) {

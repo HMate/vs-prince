@@ -40,6 +40,15 @@ export class GraphVisualizationBuilder extends SvgVisualizationBuilder {
         return edge;
     }
 
+    public createPackageBox(desc?: BoxDescription): Box {
+        const box = new Box(this, this.tts, desc);
+        this.graphElements.boxes.push(box);
+        box.onMove((_box: Box) => {
+            this.nodeMovementCallback?.(this);
+        });
+        return box;
+    }
+
     public serialize(): GraphVisualizationDescription {
         const result = {
             boxes: this.graphElements.boxes.map((box) => box.serialize()),

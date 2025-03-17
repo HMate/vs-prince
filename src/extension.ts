@@ -24,6 +24,15 @@ export function activate(context: vscode.ExtensionContext): void {
                     enableScripts: true,
                     localResourceRoots: [app.mediaUri].concat(workspaceUris),
                 });
+                app.panel.webview.onDidReceiveMessage((message) => {
+                    switch (message.command) {
+                        case "message":
+                            logger.log(message.text);
+                            break;
+                        default:
+                            break;
+                    }
+                });
 
                 app.initPanel();
 

@@ -31,4 +31,8 @@ export class WebviewStateHandler {
     clearState(): void {
         this.vscode.setState(undefined);
     }
+
+    messageToHost(message: string): void {
+        this.vscode.postMessage({ command: "message", text: message });
+    }
 }

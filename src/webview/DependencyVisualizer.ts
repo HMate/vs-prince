@@ -8,12 +8,14 @@ import { Graph, NodeId, EdgeId, GraphNode } from "./graph/Graph";
 import { GraphLayoutEngine } from "./graph/GraphLayoutEngine";
 import { NestedGraph, NestedTreeLayout } from "./graph/layout/nestedTree/NestedTreeLayout";
 import { Coord, addCoord, mulCoord } from "./utils";
+import { WebviewStateHandler } from "./WebviewStateHandler";
 
 export async function drawDependencies(
+    viewState: WebviewStateHandler,
     baseBuilder: GraphVisualizationBuilder,
     descriptor: DependencyGraphDescriptor
 ): Promise<void> {
-    await new GraphVizDiagramBuilder(baseBuilder).createDiagram(descriptor);
+    await new GraphVizDiagramBuilder(viewState, baseBuilder).createDiagram(descriptor);
 }
 
 class GraphVizDiagramBuilder {
@@ -23,11 +25,16 @@ class GraphVizDiagramBuilder {
 
     private graphviz: Graphviz | undefined = undefined;
     private readonly boxes: { [name: string]: Box } = {};
+    private readonly packageBoxes: { [name: string]: Box } = {};
     private edgeId = 0;
     private nodeDotLines: Array<string> = [];
     private edgeDotLines: Array<string> = [];
+    private packageDotLines: Array<string> = [];
 
-    public constructor(private readonly baseBuilder: GraphVisualizationBuilder) {}
+    public constructor(
+        private readonly webview: WebviewStateHandler,
+        private readonly baseBuilder: GraphVisualizationBuilder
+    ) {}
 
     public async createDiagram(descriptor: DependencyGraphDescriptor): Promise<void> {
         if (this.baseBuilder == null) {
@@ -48,15 +55,29 @@ class GraphVizDiagramBuilder {
                 }
             }
         }
+        for (const packageName in descriptor.packages) {
+            this.addPackage(packageName, descriptor.packages[packageName]);
+        }
         const dot = this.createDotRepresentation();
         console.timeEnd("Time GraphViz Build");
 
         // const svg = graphviz.dot(dot, "svg");
         // document.getElementById("prince-svg")!.innerHTML += svg;
 
-        console.time("Time GraphViz DotLayout");
-        const layoutJson = this.graphviz.dot(dot, "json");
-        console.timeEnd("Time GraphViz DotLayout");
+        let layoutJson;
+        try {
+            this.webview.messageToHost("Starting dot layout");
+            console.time("Time GraphViz DotLayout");
+            layoutJson = this.graphviz.dot(dot, "json");
+            console.timeEnd("Time GraphViz DotLayout");
+            this.webview.messageToHost("Finished dot layout");
+        } catch (error) {
+            if (error instanceof Error) {
+                console.warn("There was a problem with the dot file: " + error.message);
+                console.log(dot);
+            }
+            return;
+        }
         console.time("Time GraphViz Parse");
         const gvLayout = JSON.parse(layoutJson);
         console.timeEnd("Time GraphViz Parse");
@@ -81,6 +102,19 @@ class GraphVizDiagramBuilder {
         this.edgeId++;
     }
 
+    private addPackage(packageName: string, members: Array<string>) {
+        const b = this.baseBuilder.createBox({ name: packageName, boxStyle: { fill: "#faecb6" } });
+        this.packageBoxes[packageName] = b;
+
+        let packageDescription = `  subgraph ${this.toDotName(packageName)} {\n`;
+        packageDescription += `    cluster=true; label="${packageName}"`;
+        for (const member of members) {
+            packageDescription += `    ${this.toDotName(member)};\n`;
+        }
+        packageDescription += `  }\n`;
+        this.packageDotLines.push(packageDescription);
+    }
+
     private toDotName(name: string): string {
         return name.replaceAll(".", "_");
     }
@@ -94,6 +128,7 @@ class GraphVizDiagramBuilder {
         dot += 'node [shape="box"]\n';
         dot += "rankdir=LR\n";
 
+        dot += this.packageDotLines.join("\n");
         dot += this.nodeDotLines.join("\n");
         dot += this.edgeDotLines.join("\n");
 
@@ -104,20 +139,19 @@ class GraphVizDiagramBuilder {
 
     private moveElementsBasedOnLayout(gvLayout: any) {
         const nodeIds: { [id: number]: string } = {};
-        const groupNodes: { [name: string]: Coord } = {};
         const origoY: number = gvLayout["bb"]?.split(",")[3];
 
         gvLayout.objects?.forEach((v: any) => {
             const b = this.boxes[v.label];
             if (b == null) {
-                const parentX = v.x ?? 0;
-                const parentY = v.y ?? 0;
-                groupNodes[v.label] = { x: parentX, y: parentY };
-                // Key is for a compound group node
-                // v.children?.forEach((child) => {
-                //     const b = boxes[child.id];
-                //     b.moveCenter(parentX + (child.x ?? 0) + b.width() / 2, parentY + (child.y ?? 0) + b.height() / 2);
-                // });
+                // TODO: create smaller packages to speed debugging up, and fix the calculations here.
+                const [top, left, bottom, right] = v.bb.split(",");
+                const b = this.packageBoxes[v.label];
+                const width = (parseFloat(right) - parseFloat(left)) * this.inchToPixel;
+                const height = (parseFloat(bottom) - parseFloat(top)) * this.inchToPixel;
+                b.setWidth(width);
+                b.setHeight(height);
+                b.moveCenter(width / 2, height / 2);
                 return;
             }
             nodeIds[v._gvid] = v.label;
