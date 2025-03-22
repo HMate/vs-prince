@@ -32,7 +32,7 @@ export class Edge {
         this.path = this.builder.root.path();
 
         // if startPoint is given, it is in scene coords. We convert these to offset coords from the boxes,
-        // so we when the box moves we can move the edge too.
+        // so when the box moves we can move the edge too.
         if (this.startPoint !== undefined) {
             this.startPoint = this.start.SceneCoordToLocalCoord(this.startPoint);
         }

@@ -50,7 +50,7 @@ interface GraphVizClusterObject {
     lheight: string; // floating number as string, in inches
     lp: string; // 2 comma separated floats: box center point
     lwidth: string; // floating number as string, in inches
-    bb: string; // 4 comma separated floats: left, top, right, bottom
+    bb: string; // 4 comma separated floats in points unit: left, top, right, bottom
     nodesep: string; // floating number
     rankdir: "LR" | "TD";
     ranksep: number; // floating number
@@ -102,6 +102,9 @@ class GraphVizDiagramBuilder {
 
         console.time("Time GraphViz Build");
 
+        for (const packageName in descriptor.packages) {
+            this.addPackage(packageName, descriptor.packages[packageName]);
+        }
         for (const node of descriptor.nodes) {
             this.addNode(node);
         }
@@ -112,9 +115,6 @@ class GraphVizDiagramBuilder {
                     this.addEdge(node, dep);
                 }
             }
-        }
-        for (const packageName in descriptor.packages) {
-            this.addPackage(packageName, descriptor.packages[packageName]);
         }
         const dot = this.createDotRepresentation();
         console.timeEnd("Time GraphViz Build");
@@ -201,36 +201,25 @@ class GraphVizDiagramBuilder {
         const nodeIds: { [id: number]: string } = {};
         const origoY: number = gvLayout["bb"]?.split(",")[3];
 
+        // TODO: Object placement, size is all wrong
+        // Create some generic tool so I can create text and marks for a ruler, and measure sizes of drawn objects visually
+        // Then fix the sizes..
+
         gvLayout.objects?.forEach((v: GraphVizNodeObject | GraphVizClusterObject) => {
             let b;
             if (v.label === "\\N") {
-                v = v as GraphVizNodeObject;
                 // This is a new node, that wasn't in the original descriptor. So create a new box for it here.
-                b = this.baseBuilder.createBox({ name: v.name, boxStyle: { fill: this.nodeColor } });
-                this.boxes[v.name] = b;
-                nodeIds[v._gvid] = v.name;
+                b = this.addNodeFromGraphvizData(v as GraphVizNodeObject, nodeIds);
             } else {
                 b = this.boxes[v.label];
                 if (b == null) {
-                    v = v as GraphVizClusterObject;
-                    // TODO: create smaller packages to speed debugging up, and fix the calculations here.
-                    const [top, left, bottom, right] = v.bb.split(",");
-                    const b = this.packageBoxes[v.label];
-                    const width = (parseFloat(right) - parseFloat(left)) * this.inchToPixel;
-                    const height = (parseFloat(bottom) - parseFloat(top)) * this.inchToPixel;
-                    b.setWidth(width);
-                    b.setHeight(height);
-                    b.moveCenter(width / 2, height / 2);
+                    this.updatePackageFromGraphvizData(v as GraphVizClusterObject, origoY);
                     return;
                 }
-                v = v as GraphVizNodeObject;
                 nodeIds[v._gvid] = v.label;
             }
-            // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
-            const pos = v.pos.split(",").map((s: string) => parseFloat(s) * this.pointsToPixel);
-            b.setWidth(parseFloat(v.width) * this.inchToPixel);
-            b.setHeight(parseFloat(v.height) * this.inchToPixel);
-            b.moveCenter(pos[0] ?? 0, origoY * this.pointsToPixel - (pos[1] ?? 0));
+            v = v as GraphVizNodeObject;
+            this.updateNodeFromGraphvizData(b, v as GraphVizNodeObject, origoY);
         });
 
         gvLayout.edges?.forEach((edge: any) => {
@@ -255,11 +244,32 @@ class GraphVizDiagramBuilder {
         });
     }
 
-    private addNodeFromGraphvizData(node: string) {
-        const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
-        this.boxes[node] = b;
-        const width = b.width() * this.pixelToInches;
-        const height = b.height() * this.pixelToInches;
+    private addNodeFromGraphvizData(node: GraphVizNodeObject, nodeIds: { [id: number]: string }) {
+        const b = this.baseBuilder.createBox({ name: node.name, boxStyle: { fill: this.nodeColor } });
+        this.boxes[node.name] = b;
+        nodeIds[node._gvid] = node.name;
+        return b;
+    }
+
+    private updateNodeFromGraphvizData(box: Box, node: GraphVizNodeObject, origoY: number) {
+        // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
+        const pos = node.pos.split(",").map((s: string) => parseFloat(s) * this.pointsToPixel);
+        box.setWidth(parseFloat(node.width) * this.inchToPixel);
+        box.setHeight(parseFloat(node.height) * this.inchToPixel);
+        box.moveCenter((pos[0] ?? 0) * this.pointsToPixel, (origoY - (pos[1] ?? 0)) * this.pointsToPixel);
+    }
+
+    private updatePackageFromGraphvizData(node: GraphVizClusterObject, origoY: number) {
+        const b = this.packageBoxes[node.label];
+
+        const [left, top, right, bottom] = node.bb.split(",");
+        const width = (parseFloat(right) - parseFloat(left)) * this.pointsToPixel;
+        const height = (parseFloat(bottom) - parseFloat(top)) * this.pointsToPixel;
+        b.setWidth(width);
+        b.setHeight(height);
+
+        const [cx, cy] = node.lp.split(",");
+        b.moveCenter(parseFloat(cx) * this.pointsToPixel, (origoY - parseFloat(cy)) * this.pointsToPixel);
         return b;
     }
 
