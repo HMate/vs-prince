@@ -18,7 +18,65 @@ export async function drawDependencies(
     await new GraphVizDiagramBuilder(viewState, baseBuilder).createDiagram(descriptor);
 }
 
+type HEX = `#${string}`;
+type GVDrawColor = { op: "c"; grad: string; color: HEX };
+type GVDrawEdgeColor = { op: "C"; grad: string; color: HEX };
+type GVHDrawStyle = { op: "S"; style: string };
+type GVHDrawArrowPoints = { op: "P"; pt: Array<Array<number>> };
+type GVDrawEdgePoints = { op: "b"; points: Array<Array<number>> };
+type GVDrawPoints = { op: "p"; points: Array<Array<number>> };
+type GVLdrawFont = { op: "F"; size: number; face: string };
+type GVLdrawText = { op: "T"; pt: Array<number>; align: string; text: string; width: number };
+
+interface GraphVizNodeObject {
+    height: string; // floating number as string, in inches
+    width: string; // floating number as string, in inches
+    label: string;
+    name: string;
+    pos: string; // comma separated floats: x,y
+    shape: string; // eg: box
+    _gvid: number;
+    _draw_: Array<GVDrawColor | GVDrawPoints>;
+    _ldraw_: Array<GVDrawColor | GVLdrawFont | GVLdrawText>;
+}
+
+interface GraphVizClusterObject {
+    label: string;
+    name: string;
+    cluster: string; // true or false
+    compound: string; // true or false
+    edges: Array<number>;
+    nodes: Array<number>;
+    lheight: string; // floating number as string, in inches
+    lp: string; // 2 comma separated floats: box center point
+    lwidth: string; // floating number as string, in inches
+    bb: string; // 4 comma separated floats: left, top, right, bottom
+    nodesep: string; // floating number
+    rankdir: "LR" | "TD";
+    ranksep: number; // floating number
+    splines: string; // eg "ortho"
+    _gvid: number;
+    _draw_: Array<GVDrawColor | GVDrawPoints>;
+    _ldraw_: Array<GVDrawColor | GVDrawEdgeColor | GVLdrawText>;
+}
+
+type GraphVizEdgeDrawValue = GVDrawColor | GVDrawEdgePoints;
+type GraphVizEdgeHDrawValue = GVDrawColor | GVLdrawFont | GVHDrawStyle | GVHDrawArrowPoints;
+
+interface GraphVizEdgeObject {
+    tail: number;
+    head: number;
+    name: string;
+    pos: string; // svg path like: "e,181.54,166 91.556,251.1 91.556,219.39 91.556,166"
+    _gvid: number;
+    _draw_: Array<GraphVizEdgeDrawValue>;
+    _hdraw_: Array<GraphVizEdgeHDrawValue>;
+}
+
 class GraphVizDiagramBuilder {
+    private readonly nodeColor = "#66bb11";
+    private readonly packageColor = "#faecb6";
+
     private readonly pixelToInches = 1 / 96;
     private readonly inchToPixel = 96;
     private readonly pointsToPixel = 1.33;
@@ -89,7 +147,7 @@ class GraphVizDiagramBuilder {
     }
 
     private addNode(node: string) {
-        const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
+        const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: this.nodeColor } });
         this.boxes[node] = b;
         const width = b.width() * this.pixelToInches;
         const height = b.height() * this.pixelToInches;
@@ -103,7 +161,7 @@ class GraphVizDiagramBuilder {
     }
 
     private addPackage(packageName: string, members: Array<string>) {
-        const b = this.baseBuilder.createBox({ name: packageName, boxStyle: { fill: "#faecb6" } });
+        const b = this.baseBuilder.createBox({ name: packageName, boxStyle: { fill: this.packageColor } });
         this.packageBoxes[packageName] = b;
 
         let packageDescription = `  subgraph ${this.toDotName(packageName)} {\n`;
@@ -129,7 +187,9 @@ class GraphVizDiagramBuilder {
         dot += "rankdir=LR\n";
 
         dot += this.packageDotLines.join("\n");
+        dot += "\n";
         dot += this.nodeDotLines.join("\n");
+        dot += "\n";
         dot += this.edgeDotLines.join("\n");
 
         dot += "}";
@@ -141,20 +201,31 @@ class GraphVizDiagramBuilder {
         const nodeIds: { [id: number]: string } = {};
         const origoY: number = gvLayout["bb"]?.split(",")[3];
 
-        gvLayout.objects?.forEach((v: any) => {
-            const b = this.boxes[v.label];
-            if (b == null) {
-                // TODO: create smaller packages to speed debugging up, and fix the calculations here.
-                const [top, left, bottom, right] = v.bb.split(",");
-                const b = this.packageBoxes[v.label];
-                const width = (parseFloat(right) - parseFloat(left)) * this.inchToPixel;
-                const height = (parseFloat(bottom) - parseFloat(top)) * this.inchToPixel;
-                b.setWidth(width);
-                b.setHeight(height);
-                b.moveCenter(width / 2, height / 2);
-                return;
+        gvLayout.objects?.forEach((v: GraphVizNodeObject | GraphVizClusterObject) => {
+            let b;
+            if (v.label === "\\N") {
+                v = v as GraphVizNodeObject;
+                // This is a new node, that wasn't in the original descriptor. So create a new box for it here.
+                b = this.baseBuilder.createBox({ name: v.name, boxStyle: { fill: this.nodeColor } });
+                this.boxes[v.name] = b;
+                nodeIds[v._gvid] = v.name;
+            } else {
+                b = this.boxes[v.label];
+                if (b == null) {
+                    v = v as GraphVizClusterObject;
+                    // TODO: create smaller packages to speed debugging up, and fix the calculations here.
+                    const [top, left, bottom, right] = v.bb.split(",");
+                    const b = this.packageBoxes[v.label];
+                    const width = (parseFloat(right) - parseFloat(left)) * this.inchToPixel;
+                    const height = (parseFloat(bottom) - parseFloat(top)) * this.inchToPixel;
+                    b.setWidth(width);
+                    b.setHeight(height);
+                    b.moveCenter(width / 2, height / 2);
+                    return;
+                }
+                v = v as GraphVizNodeObject;
+                nodeIds[v._gvid] = v.label;
             }
-            nodeIds[v._gvid] = v.label;
             // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
             const pos = v.pos.split(",").map((s: string) => parseFloat(s) * this.pointsToPixel);
             b.setWidth(parseFloat(v.width) * this.inchToPixel);
@@ -184,11 +255,19 @@ class GraphVizDiagramBuilder {
         });
     }
 
-    private collectEdgeControlPoints(edge: any, origoY: number): Array<Coord> {
+    private addNodeFromGraphvizData(node: string) {
+        const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: "#66bb11" } });
+        this.boxes[node] = b;
+        const width = b.width() * this.pixelToInches;
+        const height = b.height() * this.pixelToInches;
+        return b;
+    }
+
+    private collectEdgeControlPoints(edge: GraphVizEdgeObject, origoY: number): Array<Coord> {
         let cps: Array<Coord> = [];
 
-        const edgePointsOption = this.findPointListField(edge["_draw_"], "b");
-        const arrowPointsOption = this.findPointListField(edge["_hdraw_"], "p");
+        const edgePointsOption = this.findPointListField(edge["_draw_"], "b") as GVDrawEdgePoints | undefined;
+        const arrowPointsOption = this.findPointListField(edge["_hdraw_"], "p") as GVDrawPoints | undefined;
 
         if (edgePointsOption && "points" in edgePointsOption) {
             cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
@@ -204,7 +283,10 @@ class GraphVizDiagramBuilder {
         return cps;
     }
 
-    private findPointListField(ar: Array<{ ["op"]: string }> | undefined, opCode: string) {
+    private findPointListField(
+        ar: Array<GraphVizEdgeHDrawValue> | Array<GraphVizEdgeDrawValue> | undefined,
+        opCode: string
+    ) {
         if (ar == null) {
             return undefined;
         }
