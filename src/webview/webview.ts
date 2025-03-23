@@ -5,7 +5,7 @@ import "@svgdotjs/svg.draggable.js";
 
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from "./extensionMessages";
-import { drawDependencies } from "./DependencyVisualizer";
+import { drawDependencies } from "./drawing/DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "./WebviewStateHandler";
 
 /** TODO - future features:
