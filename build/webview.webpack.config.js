@@ -56,7 +56,7 @@ const config = {
                 test: /\.ttf$/i,
                 type: "asset/resource",
                 generator: {
-                    filename: "font/[name].[ext][query]",
+                    filename: "resources/font/[name].[ext][query]",
                 },
             },
             {
@@ -81,7 +81,7 @@ const config = {
         new MiniCssExtractPlugin({ filename: "webview-style.css" }),
         new WatchTimerPlugin(),
         new CopyPlugin({
-            patterns: [{ from: "./src/webview/image", to: "image" }],
+            patterns: [{ from: "./src/webview/resources/image", to: "resources/image" }],
         }),
     ],
 };

@@ -1,5 +1,5 @@
 import TextToSVG from "./TextToSvg";
-import RobotoFont from "./font/RobotoMono.ttf";
+import RobotoFont from "./resources/font/RobotoMono.ttf";
 import "./webview-style.scss";
 import "@svgdotjs/svg.draggable.js";
 
