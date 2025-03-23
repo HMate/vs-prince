@@ -1,11 +1,11 @@
 import elk, { ElkExtendedEdge, ElkNode } from "elkjs";
 
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
-import { DependencyGraphDescriptor } from "../extensionMessages";
-import { Box } from "../graphVisualizationElements/Box";
-import { Graph, GraphNode } from "../graph/Graph";
-import { NestedGraph, NestedTreeLayout } from "../graph/layout/nestedTree/NestedTreeLayout";
-import { Coord, addCoord } from "../utils";
+import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { Graph, GraphNode } from "@ww/graph/Graph";
+import { NestedGraph, NestedTreeLayout } from "@ww/graph/layout/nestedTree/NestedTreeLayout";
+import { Coord, addCoord } from "@ww/utils";
+import { Box } from "./diagramElements/Box";
+import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 
 export async function drawDependenciesElk(
     baseBuilder: GraphVisualizationBuilder,

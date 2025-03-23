@@ -1,8 +1,8 @@
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
-import { DependencyGraphDescriptor } from "../extensionMessages";
-import { Box } from "../graphVisualizationElements/Box";
-import { Graph, NodeId, EdgeId } from "../graph/Graph";
-import { GraphLayoutEngine } from "../graph/GraphLayoutEngine";
+import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { Graph, NodeId, EdgeId } from "@ww/graph/Graph";
+import { GraphLayoutEngine } from "@ww/graph/GraphLayoutEngine";
+import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
+import { Box } from "./diagramElements/Box";
 
 export function drawDependenciesCustom(
     baseBuilder: GraphVisualizationBuilder,

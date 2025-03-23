@@ -1,5 +1,5 @@
-import { addCoord, Coord } from "../../../utils";
-import { Graph, ConcreteGraph } from "../../Graph";
+import { addCoord, Coord } from "@ww/utils";
+import { Graph, ConcreteGraph } from "@ww/graph/Graph";
 import { OrganizationalLayers, OrganizationalLayer } from "./OrganizationEngine";
 
 export class ConcretizationEngine {

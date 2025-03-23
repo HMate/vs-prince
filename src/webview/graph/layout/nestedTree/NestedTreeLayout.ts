@@ -1,5 +1,5 @@
-import { Graph, GraphNode, GraphEdge, NodeId } from "../../Graph";
-import { OrganizationEngine, OrganizationalLayers } from "../cyclicTree/OrganizationEngine";
+import { Graph, GraphNode, GraphEdge, NodeId } from "@ww/graph/Graph";
+import { OrganizationEngine, OrganizationalLayers } from "@ww/graph/layout/cyclicTree/OrganizationEngine";
 
 export type GraphId = string;
 export type GraphDictionary = { [id: GraphId]: Graph };

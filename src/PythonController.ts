@@ -3,7 +3,7 @@ import path from "path";
 
 import { PythonExtension } from "@vscode/python-extension";
 import { PyPrince } from "@mhidvegi/pyprince";
-import { Logger } from "./Logger";
+import { Logger } from "@prince/Logger";
 
 export class PythonController {
     public constructor(private readonly logger: Logger) {}

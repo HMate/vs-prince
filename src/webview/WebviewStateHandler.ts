@@ -1,6 +1,6 @@
 import { WebviewApi } from "vscode-webview";
-import { GraphVisualizationDescription } from "./GraphVisualizationBuilder";
-import { CameraState } from "./SvgVisualizationBuilder";
+import { GraphVisualizationDescription } from "@ww/drawing/GraphVisualizationBuilder";
+import { CameraState } from "@ww/drawing/SvgVisualizationBuilder";
 
 /** Can be used for tracking if the state was saved with a compatible version.
  * If CURRENT_VIEW_STATE_VERSION is changed, state saved in older versions of vsc-prince will be

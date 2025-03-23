@@ -1,9 +1,10 @@
 import { Path, Marker } from "@svgdotjs/svg.js";
-import { Coord, asString } from "../utils";
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
+
+import { Coord, asString } from "@ww/utils";
+import { GraphVisualizationBuilder } from "@ww/drawing/GraphVisualizationBuilder";
+import { NodeId } from "@ww/graph/Graph";
 import { Box } from "./Box";
-import { NodeId } from "../graph/Graph";
-import { BSpline } from "../spline/BSpline";
+import { BSpline } from "./spline/BSpline";
 
 export interface EdgeDescription {
     start: NodeId;

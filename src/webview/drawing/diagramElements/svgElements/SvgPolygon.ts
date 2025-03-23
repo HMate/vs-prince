@@ -1,4 +1,4 @@
-import { Point } from "../utils";
+import { Point } from "@ww/utils";
 import { SvgVisualElement } from "./SvgVisualElement";
 
 export class SvgPolygon extends SvgVisualElement {

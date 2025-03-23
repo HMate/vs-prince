@@ -6,6 +6,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CopyPlugin = require("copy-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
 
 class WatchTimerPlugin {
     apply(compiler) {
@@ -37,6 +38,11 @@ const config = {
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
         extensions: [".ts", ".js", ".html", ".ttf", ".gif"],
+        plugins: [
+            new TsconfigPathsPlugin({
+                /* options: see https://www.npmjs.com/package/tsconfig-paths-webpack-plugin */
+            }),
+        ],
     },
     module: {
         rules: [

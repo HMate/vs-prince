@@ -1,9 +1,9 @@
 import { Container, Rect, Text } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.draggable.js";
 
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
-import TextToSVG from "../TextToSvg";
-import { Coord } from "../utils";
+import TextToSVG from "@ww/TextToSvg";
+import { Coord } from "@ww/utils";
+import { GraphVisualizationBuilder } from "@ww/drawing/GraphVisualizationBuilder";
 
 export interface BoxDescription {
     name: string;

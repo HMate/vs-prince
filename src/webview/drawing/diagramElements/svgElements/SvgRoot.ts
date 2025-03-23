@@ -1,4 +1,4 @@
-import { Coord } from "../utils";
+import { Coord } from "@ww/utils";
 import { SvgGroup } from "./SvgGroup";
 import { SvgVisualElement } from "./SvgVisualElement";
 

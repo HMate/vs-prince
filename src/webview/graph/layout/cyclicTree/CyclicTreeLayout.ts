@@ -1,4 +1,4 @@
-import { Graph, ConcreteGraph } from "../../Graph";
+import { Graph, ConcreteGraph } from "@ww/graph/Graph";
 import { OrganizationEngine } from "./OrganizationEngine";
 import { ConcretizationEngine } from "./ConcretizationEngine";
 

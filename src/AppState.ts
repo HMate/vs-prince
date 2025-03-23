@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ContentLoader } from "./ContentLoader";
+import { ContentLoader } from "@prince/ContentLoader";
 
 /** Holds the state of the extension app. Also contains utility methods for extension specific paths. */
 export class AppState {

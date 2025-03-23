@@ -1,10 +1,10 @@
 import { Graphviz } from "@hpcc-js/wasm/graphviz";
 
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
-import { DependencyGraphDescriptor } from "../extensionMessages";
-import { Box } from "../graphVisualizationElements/Box";
-import { Coord, mulCoord } from "../utils";
-import { WebviewStateHandler } from "../WebviewStateHandler";
+import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { Coord, mulCoord } from "@ww/utils";
+import { WebviewStateHandler } from "@ww/WebviewStateHandler";
+import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
+import { Box } from "./diagramElements/Box";
 
 type HEX = `#${string}`;
 type GVDrawColor = { op: "c"; grad: string; color: HEX };

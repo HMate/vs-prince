@@ -1,4 +1,4 @@
-import { Coord, interpCoord } from "../utils";
+import { Coord, interpCoord } from "@ww/utils";
 
 export class BSpline {
     constructor(readonly controlPoints: Coord[] = []) {}

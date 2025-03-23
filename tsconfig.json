@@ -8,6 +8,10 @@
         "sourceMap": true,
         "rootDir": "src",
         "strict": true /* enable all strict type-checking options */,
+        "paths": {
+          "@prince/*": ["./src/*"],
+          "@ww/*": ["./src/webview/*"],
+        },
         "esModuleInterop": true,
         "plugins": [{ "name": "typescript-plugin-css-modules" }],
         /* Additional Checks */

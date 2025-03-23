@@ -2,6 +2,7 @@
 
 const path = require("path");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const { TsconfigPathsPlugin } = require("tsconfig-paths-webpack-plugin");
 
 class WatchTimerPlugin {
     apply(compiler) {
@@ -30,6 +31,11 @@ const config = {
     resolve: {
         // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
         extensions: [".ts", ".js", ".html"],
+        plugins: [
+            new TsconfigPathsPlugin({
+                /* options: see https://www.npmjs.com/package/tsconfig-paths-webpack-plugin */
+            }),
+        ],
     },
     module: {
         rules: [

@@ -1,12 +1,13 @@
-import TextToSVG from "./TextToSvg";
-import RobotoFont from "./resources/font/RobotoMono.ttf";
-import "./webview-style.scss";
+import TextToSVG from "@ww/TextToSvg";
+import RobotoFont from "@ww/resources/font/RobotoMono.ttf";
+
+import "@ww/webview-style.scss";
 import "@svgdotjs/svg.draggable.js";
 
-import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
-import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from "./extensionMessages";
-import { drawDependencies } from "./drawing/DependencyVisualizer";
-import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "./WebviewStateHandler";
+import { GraphVisualizationBuilder } from "@ww/drawing/GraphVisualizationBuilder";
+import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from "@ww/extensionMessages";
+import { drawDependencies } from "@ww/drawing/DependencyVisualizer";
+import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "@ww/WebviewStateHandler";
 
 /** TODO - future features:
  * - Use GoJS!

@@ -1,6 +1,6 @@
-import { Graph, ConcreteGraph } from "./Graph";
-import { CyclicTreeLayout } from "./layout/cyclicTree/CyclicTreeLayout";
-import { NestedTreeLayout } from "./layout/nestedTree/NestedTreeLayout";
+import { Graph, ConcreteGraph } from "@ww/graph/Graph";
+import { CyclicTreeLayout } from "@ww/graph/layout/cyclicTree/CyclicTreeLayout";
+import { NestedTreeLayout } from "@ww/graph/layout/nestedTree/NestedTreeLayout";
 
 export class GraphLayoutEngine {
     public layoutCyclicTree(graph: Graph): ConcreteGraph {

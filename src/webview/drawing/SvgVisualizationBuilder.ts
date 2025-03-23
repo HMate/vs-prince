@@ -1,11 +1,11 @@
 import { Svg, SVG, Element, Rect, Text, Circle, Container } from "@svgdotjs/svg.js";
 import { Marker, Polygon, Box } from "@svgdotjs/svg.js";
+import { Point as SvgPoint, Number as SvgNumber } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.panzoom.js";
 
-import SvgComplexContainer from "./svgElements/SvgComplexContainer";
-import { Coord, Point } from "./utils";
-import TextToSVG from "./TextToSvg";
-import { Point as SvgPoint, Number as SvgNumber } from "@svgdotjs/svg.js";
+import SvgComplexContainer from "@ww/drawing/diagramElements/svgElements/SvgComplexContainer";
+import { Coord, Point } from "@ww/utils";
+import TextToSVG from "@ww/TextToSvg";
 
 export interface CameraState {
     zoomLevel: number;

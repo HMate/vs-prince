@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 
-import { Logger } from "./Logger";
+import { Logger } from "@prince/Logger";
 
 /** Loads and updates the html content of webviews */
 export class ContentLoader {

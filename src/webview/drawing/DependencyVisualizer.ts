@@ -1,9 +1,9 @@
-import { GraphVisualizationBuilder } from "../GraphVisualizationBuilder";
-import { DependencyGraphDescriptor } from "../extensionMessages";
-import { WebviewStateHandler } from "../WebviewStateHandler";
+import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { WebviewStateHandler } from "@ww/WebviewStateHandler";
 import { GraphVizDiagramBuilder } from "./GraphvizDiagramBuilder";
 import { drawDependenciesElk } from "./ElkjsDiagramBuilder";
 import { drawDependenciesCustom } from "./CustomDiagramBuilder";
+import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 
 export async function drawDependencies(
     viewState: WebviewStateHandler,

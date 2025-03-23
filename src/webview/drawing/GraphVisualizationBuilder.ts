@@ -1,7 +1,7 @@
-import { Box, BoxDescription } from "./graphVisualizationElements/Box";
-import { Edge, EdgeDescription } from "./graphVisualizationElements/Edge";
+import { Box, BoxDescription } from "./diagramElements/Box";
+import { Edge, EdgeDescription } from "./diagramElements/Edge";
 import { SvgVisualizationBuilder } from "./SvgVisualizationBuilder";
-import { Coord } from "./utils";
+import { Coord } from "@ww/utils";
 
 export interface GraphVisualizationDescription {
     boxes: BoxDescription[];

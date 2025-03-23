@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 
-import { WebviewSerializer } from "./WebviewSerializer";
-import { AppState } from "./AppState";
-import { Logger } from "./Logger";
-import { PythonController } from "./PythonController";
+import { WebviewSerializer } from "@prince/WebviewSerializer";
+import { AppState } from "@prince/AppState";
+import { Logger } from "@prince/Logger";
+import { PythonController } from "@prince/PythonController";
 
 export function activate(context: vscode.ExtensionContext): void {
     const app = new AppState(context);
