@@ -1,5 +1,5 @@
 import { Svg, SVG, Element, Rect, Text, Circle, Container } from "@svgdotjs/svg.js";
-import { Marker, Polygon, Box } from "@svgdotjs/svg.js";
+import { Marker, Polygon, Box, Line } from "@svgdotjs/svg.js";
 import { Point as SvgPoint, Number as SvgNumber } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.panzoom.js";
 
@@ -93,6 +93,11 @@ export class SvgVisualizationBuilder {
     /** Polygon coordinate origin is in left-top. */
     public createPolygon(points: Array<Point>): Polygon {
         return this.root.polygon(points.map((p) => `${p[0]},${p[1]}`).join(" "));
+    }
+
+    /** Polygon coordinate origin is in left-top. */
+    public createLine(points: Array<Coord>): Line {
+        return this.root.line(points.map((p) => `${p.x},${p.y}`).join(" "));
     }
 
     /** Initializes the camera for the scene. The callback gets invoked after camera pan and zoom events */

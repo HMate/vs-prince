@@ -16,8 +16,13 @@
         "editor.formatOnSave": true
     },
     "[typescript]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "javascript.preferences.importModuleSpecifier": "shortest",
+        
     },
+    "colorize.languages": [
+        "javascript", "typescript", "css"
+    ],
 
     "mochaExplorer.files": "src/test/suite/*.ts",
     "mochaExplorer.require": "ts-node/register",
