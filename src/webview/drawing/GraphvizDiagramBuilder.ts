@@ -198,9 +198,9 @@ export class GraphVizDiagramBuilder {
         const boundingBox: Array<number> = gvLayout["bb"]?.split(",").map((x: string) => parseFloat(x)); // llx,lly,urx,ury - lowerleft, upperright
         this.bbTop = boundingBox[3];
 
-        // TODO: Object placement, size is all wrong
-        // Create some generic tool so I can create text and marks for a ruler, and measure sizes of drawn objects visually
-        // Then fix the sizes..
+        // TODO: Create proper parsing from gv dot string to graph elements descriptors to avoid
+        // further multiple day debugging sessions because of not remembering gv,svg units, meaning of members etc..
+
         this.drawDebugUnitScale(boundingBox);
 
         gvLayout.objects?.forEach((v: GraphVizNodeObject | GraphVizClusterObject) => {
@@ -298,8 +298,7 @@ export class GraphVizDiagramBuilder {
 
     private updateNodeFromGraphvizData(box: Box, node: GraphVizNodeObject) {
         const pos = node.pos.split(",").map((s: string) => parseFloat(s));
-        box.setWidth(parseFloat(node.width) * this.inchToPixel);
-        box.setHeight(parseFloat(node.height) * this.inchToPixel);
+        box.setSize(parseFloat(node.width) * this.inchToPixel, parseFloat(node.height) * this.inchToPixel);
         const centerPos = this.graphVizPointToSceneCoord(pos[0], pos[1]);
         box.moveCenter(centerPos.x, centerPos.y);
 
@@ -314,11 +313,11 @@ export class GraphVizDiagramBuilder {
         const [left, bottom, right, top] = node.bb.split(",").map((s: string) => parseFloat(s));
         const width = (right - left) * this.pointsToPixel;
         const height = (top - bottom) * this.pointsToPixel;
-        b.setWidth(width);
-        b.setHeight(height);
+        b.setSize(width, height);
 
         const center = this.graphVizPointToSceneCoord((right + left) / 2, (bottom + top) / 2);
         b.moveCenter(center.x, center.y);
+
         const [cx, cy] = node.lp.split(",").map((s: string) => parseFloat(s));
         const labelCenter = this.graphVizPointToSceneCoord(cx, cy);
         this.webview.messageToHost(`Package text ${node.label} to ${labelCenter} from (${cx}, ${cy}) gv point`);

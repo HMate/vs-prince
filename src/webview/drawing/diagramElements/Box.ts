@@ -12,6 +12,7 @@ export interface BoxDescription {
     centerPosition?: Coord;
     boxStyle?: any;
     textStyle?: any; // Uses text attributes, and not css props
+    textPosition?: Coord;
 }
 
 // A box is a rectanble shape with a name label
@@ -54,6 +55,10 @@ export class Box {
         // Have to call moveCenter after render+update, because they both change the size and thus affect how center is calculated
         if (description?.centerPosition) {
             this.moveCenter(description.centerPosition.x, description.centerPosition.y);
+        }
+        if (description?.textPosition) {
+            this.desc.textPosition = description?.textPosition;
+            this.moveLabelRelative(description?.textPosition.x, description?.textPosition.y);
         }
     }
 
@@ -98,11 +103,25 @@ export class Box {
         return this.root;
     }
 
+    public setSize(width: number, height: number): void {
+        // NOTE: Setting width/height of node can cause the label to be left outside the box.
+        // In this case the center of the box will not align with the center of the shape, because svg computes the
+        // center from the bounding box of the whole compnent. So we have to move the text first before the center!
+        this.innerSetWidth(width);
+        this.innerSetHeight(height);
+        this.update();
+    }
+
     public width(): number {
         return Number(this.shapeHolder.width());
     }
 
     public setWidth(w: number): void {
+        this.innerSetWidth(w);
+        this.update();
+    }
+
+    private innerSetWidth(w: number): void {
         this.desc.width = w;
         this.shapeHolder.width(w);
     }
@@ -112,6 +131,11 @@ export class Box {
     }
 
     public setHeight(w: number): void {
+        this.innerSetHeight(w);
+        this.update();
+    }
+
+    public innerSetHeight(w: number): void {
         this.desc.height = w;
         this.shapeHolder.height(w);
     }
@@ -154,7 +178,12 @@ export class Box {
 
     public moveLabel(cx: number, cy: number): void {
         const relPos = coord(cx - Number(this.root.x()), cy - Number(this.root.y()));
-        this.nameHolder.center(relPos.x, relPos.y);
+        this.moveLabelRelative(relPos.x, relPos.y);
+    }
+
+    public moveLabelRelative(cx: number, cy: number): void {
+        this.desc.textPosition = { x: cx, y: cy };
+        this.nameHolder.center(cx, cy);
     }
 
     private addMovementHandlers(group: Container): void {

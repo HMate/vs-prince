@@ -50,7 +50,6 @@ export class GraphVisualizationBuilder extends SvgVisualizationBuilder {
     }
 
     public serialize(): GraphVisualizationDescription {
-        // TODO: Update with packages, and label pos
         const result = {
             boxes: this.graphElements.boxes.map((box) => box.serialize()),
             edges: this.graphElements.edges.map((edge) => edge.serialize()),
