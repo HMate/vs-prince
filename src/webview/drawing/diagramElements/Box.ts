@@ -2,7 +2,7 @@ import { Container, Rect, Text } from "@svgdotjs/svg.js";
 import "@svgdotjs/svg.draggable.js";
 
 import TextToSVG from "@ww/TextToSvg";
-import { Coord } from "@ww/utils";
+import { coord, Coord } from "@ww/utils";
 import { GraphVisualizationBuilder } from "@ww/drawing/GraphVisualizationBuilder";
 
 export interface BoxDescription {
@@ -150,6 +150,11 @@ export class Box {
         this.desc.centerPosition = { x: cx, y: cy };
         this.root.cx(cx);
         this.root.cy(cy);
+    }
+
+    public moveLabel(cx: number, cy: number): void {
+        const relPos = coord(cx - Number(this.root.x()), cy - Number(this.root.y()));
+        this.nameHolder.center(relPos.x, relPos.y);
     }
 
     private addMovementHandlers(group: Container): void {

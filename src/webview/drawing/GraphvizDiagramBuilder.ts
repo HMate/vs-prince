@@ -37,7 +37,7 @@ interface GraphVizClusterObject {
     edges: Array<number>;
     nodes: Array<number>;
     lheight: string; // floating number as string, in inches
-    lp: string; // 2 comma separated floats: box center point
+    lp: string; // 2 comma separated floats: label text center point
     lwidth: string; // floating number as string, in inches
     bb: string; // 4 comma separated floats in points unit: llx,lly,urx,ury - lowerleft, upperright
     nodesep: string; // floating number
@@ -311,16 +311,18 @@ export class GraphVizDiagramBuilder {
     private updatePackageFromGraphvizData(node: GraphVizClusterObject) {
         const b = this.packageBoxes[node.label];
 
-        const [left, bottom, right, top] = node.bb.split(",");
-        const width = (parseFloat(right) - parseFloat(left)) * this.pointsToPixel;
-        const height = (parseFloat(top) - parseFloat(bottom)) * this.pointsToPixel;
+        const [left, bottom, right, top] = node.bb.split(",").map((s: string) => parseFloat(s));
+        const width = (right - left) * this.pointsToPixel;
+        const height = (top - bottom) * this.pointsToPixel;
         b.setWidth(width);
         b.setHeight(height);
 
-        // TODO: There should be a "pos" instead of lp in cluster too, right?
-        const [cx, cy] = node.lp.split(",");
-        const center = this.graphVizPointToSceneCoord(parseFloat(cx), parseFloat(cy));
+        const center = this.graphVizPointToSceneCoord((right + left) / 2, (bottom + top) / 2);
         b.moveCenter(center.x, center.y);
+        const [cx, cy] = node.lp.split(",").map((s: string) => parseFloat(s));
+        const labelCenter = this.graphVizPointToSceneCoord(cx, cy);
+        this.webview.messageToHost(`Package text ${node.label} to ${labelCenter} from (${cx}, ${cy}) gv point`);
+        b.moveLabel(labelCenter.x, labelCenter.y);
         return b;
     }
 
