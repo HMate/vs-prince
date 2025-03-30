@@ -1,10 +1,11 @@
 import { Graphviz } from "@hpcc-js/wasm/graphviz";
 
 import { DependencyGraphDescriptor } from "@ww/extensionMessages";
-import { Coord, mulCoord } from "@ww/utils";
+import { coord, Coord, mulCoord } from "@ww/utils";
 import { WebviewStateHandler } from "@ww/WebviewStateHandler";
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
 import { Box } from "./diagramElements/Box";
+import { BaseElementsBuilder } from "./BaseElementsBuilder";
 
 type HEX = `#${string}`;
 type GVDrawColor = { op: "c"; grad: string; color: HEX };
@@ -21,7 +22,7 @@ interface GraphVizNodeObject {
     width: string; // floating number as string, in inches
     label: string;
     name: string;
-    pos: string; // comma separated floats: x,y
+    pos: string; // comma separated floats: x,y in points
     shape: string; // eg: box
     _gvid: number;
     _draw_: Array<GVDrawColor | GVDrawPoints>;
@@ -38,7 +39,7 @@ interface GraphVizClusterObject {
     lheight: string; // floating number as string, in inches
     lp: string; // 2 comma separated floats: box center point
     lwidth: string; // floating number as string, in inches
-    bb: string; // 4 comma separated floats in points unit: left, top, right, bottom
+    bb: string; // 4 comma separated floats in points unit: llx,lly,urx,ury - lowerleft, upperright
     nodesep: string; // floating number
     rankdir: "LR" | "TD";
     ranksep: number; // floating number
@@ -55,7 +56,7 @@ interface GraphVizEdgeObject {
     tail: number;
     head: number;
     name: string;
-    pos: string; // svg path like: "e,181.54,166 91.556,251.1 91.556,219.39 91.556,166"
+    pos: string; // svg path like: "e,181.54,166 91.556,251.1 91.556,219.39 91.556,166" # https://www.graphviz.org/docs/attr-types/splineType/
     _gvid: number;
     _draw_: Array<GraphVizEdgeDrawValue>;
     _hdraw_: Array<GraphVizEdgeHDrawValue>;
@@ -65,9 +66,14 @@ export class GraphVizDiagramBuilder {
     private readonly nodeColor = "#66bb11";
     private readonly packageColor = "#faecb6";
 
+    // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
     private readonly pixelToInches = 1 / 96;
     private readonly inchToPixel = 96;
     private readonly pointsToPixel = 1.33;
+
+    private bbTop = 0;
+
+    private readonly debugBuilder: BaseElementsBuilder;
 
     private graphviz: Graphviz | undefined = undefined;
     private readonly boxes: { [name: string]: Box } = {};
@@ -80,7 +86,9 @@ export class GraphVizDiagramBuilder {
     public constructor(
         private readonly webview: WebviewStateHandler,
         private readonly baseBuilder: GraphVisualizationBuilder
-    ) {}
+    ) {
+        this.debugBuilder = new BaseElementsBuilder(baseBuilder);
+    }
 
     public async createDiagram(descriptor: DependencyGraphDescriptor): Promise<void> {
         if (this.baseBuilder == null) {
@@ -187,11 +195,13 @@ export class GraphVizDiagramBuilder {
 
     private moveElementsBasedOnLayout(gvLayout: any) {
         const nodeIds: { [id: number]: string } = {};
-        const origoY: number = gvLayout["bb"]?.split(",")[3];
+        const boundingBox: Array<number> = gvLayout["bb"]?.split(",").map((x: string) => parseFloat(x)); // llx,lly,urx,ury - lowerleft, upperright
+        this.bbTop = boundingBox[3];
 
         // TODO: Object placement, size is all wrong
         // Create some generic tool so I can create text and marks for a ruler, and measure sizes of drawn objects visually
         // Then fix the sizes..
+        this.drawDebugUnitScale(boundingBox);
 
         gvLayout.objects?.forEach((v: GraphVizNodeObject | GraphVizClusterObject) => {
             let b;
@@ -201,13 +211,13 @@ export class GraphVizDiagramBuilder {
             } else {
                 b = this.boxes[v.label];
                 if (b == null) {
-                    this.updatePackageFromGraphvizData(v as GraphVizClusterObject, origoY);
+                    this.updatePackageFromGraphvizData(v as GraphVizClusterObject);
                     return;
                 }
                 nodeIds[v._gvid] = v.label;
             }
             v = v as GraphVizNodeObject;
-            this.updateNodeFromGraphvizData(b, v as GraphVizNodeObject, origoY);
+            this.updateNodeFromGraphvizData(b, v as GraphVizNodeObject);
         });
 
         gvLayout.edges?.forEach((edge: any) => {
@@ -218,8 +228,11 @@ export class GraphVizDiagramBuilder {
                 return;
             }
 
-            const cps = this.collectEdgeControlPoints(edge, origoY);
+            const cps = this.collectEdgeControlPoints(edge);
             if (cps.length >= 3) {
+                this.webview.messageToHost(
+                    `Create edge (${startNode}--${endNode}) from start ${cps[0]} to end ${cps[cps.length - 1]}`
+                );
                 this.baseBuilder.createEdge(
                     this.boxes[startNode],
                     this.boxes[endNode],
@@ -232,6 +245,50 @@ export class GraphVizDiagramBuilder {
         });
     }
 
+    private drawDebugUnitScale(boundingBox: Array<number>) {
+        const [left, bottom, right, top] = boundingBox;
+        this.webview.messageToHost(`GV Bounding box: left: ${left}, bottom: ${bottom}, right: ${right}, top: ${top}`);
+        const bbTop = top * this.pointsToPixel;
+        const violet = "#BB1199";
+        const green = "#119922";
+
+        this.debugBuilder.createText(
+            "GV Points X",
+            coord(left * this.pointsToPixel + 10, bbTop - bottom * this.pointsToPixel + 10)
+        );
+        const bbWidth = right - left;
+        const bbXUnit = bbWidth / 20;
+        for (let index = left; index < right; index = index + bbXUnit) {
+            const start = index;
+            const end = index + bbXUnit;
+            this.debugBuilder.drawLineSegment(
+                coord(start * this.pointsToPixel, bbTop - bottom * this.pointsToPixel),
+                coord(end * this.pointsToPixel, bbTop - bottom * this.pointsToPixel),
+                coord(0, 4),
+                violet,
+                end.toFixed(2).toString()
+            );
+        }
+
+        this.debugBuilder.createText(
+            "GV Points Y",
+            coord(left * this.pointsToPixel - 10, (top - bottom) * this.pointsToPixel - 10)
+        );
+        const bbHeight = top - bottom;
+        const bbYUnit = bbHeight / 20;
+        for (let index = bottom; index < top; index = index + bbYUnit) {
+            const start = index;
+            const end = index + bbYUnit;
+            this.debugBuilder.drawLineSegment(
+                coord(left * this.pointsToPixel + 2, bbTop - start * this.pointsToPixel),
+                coord(left * this.pointsToPixel + 2, bbTop - end * this.pointsToPixel),
+                coord(6, 0),
+                green,
+                end.toFixed(2).toString()
+            );
+        }
+    }
+
     private addNodeFromGraphvizData(node: GraphVizNodeObject, nodeIds: { [id: number]: string }) {
         const b = this.baseBuilder.createBox({ name: node.name, boxStyle: { fill: this.nodeColor } });
         this.boxes[node.name] = b;
@@ -239,46 +296,59 @@ export class GraphVizDiagramBuilder {
         return b;
     }
 
-    private updateNodeFromGraphvizData(box: Box, node: GraphVizNodeObject, origoY: number) {
-        // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
-        const pos = node.pos.split(",").map((s: string) => parseFloat(s) * this.pointsToPixel);
+    private updateNodeFromGraphvizData(box: Box, node: GraphVizNodeObject) {
+        const pos = node.pos.split(",").map((s: string) => parseFloat(s));
         box.setWidth(parseFloat(node.width) * this.inchToPixel);
         box.setHeight(parseFloat(node.height) * this.inchToPixel);
-        box.moveCenter((pos[0] ?? 0) * this.pointsToPixel, (origoY - (pos[1] ?? 0)) * this.pointsToPixel);
+        const centerPos = this.graphVizPointToSceneCoord(pos[0], pos[1]);
+        box.moveCenter(centerPos.x, centerPos.y);
+
+        this.webview.messageToHost(
+            `Moving node ${node.name} to ${centerPos} (derived from (${pos[0]}, ${pos[1]}) gv point`
+        );
     }
 
-    private updatePackageFromGraphvizData(node: GraphVizClusterObject, origoY: number) {
+    private updatePackageFromGraphvizData(node: GraphVizClusterObject) {
         const b = this.packageBoxes[node.label];
 
-        const [left, top, right, bottom] = node.bb.split(",");
+        const [left, bottom, right, top] = node.bb.split(",");
         const width = (parseFloat(right) - parseFloat(left)) * this.pointsToPixel;
-        const height = (parseFloat(bottom) - parseFloat(top)) * this.pointsToPixel;
+        const height = (parseFloat(top) - parseFloat(bottom)) * this.pointsToPixel;
         b.setWidth(width);
         b.setHeight(height);
 
+        // TODO: There should be a "pos" instead of lp in cluster too, right?
         const [cx, cy] = node.lp.split(",");
-        b.moveCenter(parseFloat(cx) * this.pointsToPixel, (origoY - parseFloat(cy)) * this.pointsToPixel);
+        const center = this.graphVizPointToSceneCoord(parseFloat(cx), parseFloat(cy));
+        b.moveCenter(center.x, center.y);
         return b;
     }
 
-    private collectEdgeControlPoints(edge: GraphVizEdgeObject, origoY: number): Array<Coord> {
+    private collectEdgeControlPoints(edge: GraphVizEdgeObject): Array<Coord> {
         let cps: Array<Coord> = [];
 
         const edgePointsOption = this.findPointListField(edge["_draw_"], "b") as GVDrawEdgePoints | undefined;
         const arrowPointsOption = this.findPointListField(edge["_hdraw_"], "p") as GVDrawPoints | undefined;
 
         if (edgePointsOption && "points" in edgePointsOption) {
-            cps = (edgePointsOption!.points as Array<[number, number]>).map((p) =>
-                mulCoord({ x: p[0], y: origoY - p[1] }, this.pointsToPixel)
+            this.webview.messageToHost(
+                `Edge (${edge.name}) points: ${edgePointsOption.points.map((p) => coord(p[0], p[1]))}`
             );
+            cps = (edgePointsOption.points as Array<[number, number]>).map((p) => {
+                return this.graphVizPointToSceneCoord(p[0], p[1]);
+            });
         }
         if (arrowPointsOption && "points" in arrowPointsOption) {
-            const arrowCps = (arrowPointsOption!.points as Array<[number, number]>).map((p) =>
-                mulCoord({ x: p[0], y: origoY - p[1] }, this.pointsToPixel)
+            const arrowCps = (arrowPointsOption.points as Array<[number, number]>).map((p) =>
+                this.graphVizPointToSceneCoord(p[0], p[1])
             );
             cps.push(arrowCps[1]);
         }
         return cps;
+    }
+
+    private graphVizPointToSceneCoord(p0: number, p1: number): Coord {
+        return mulCoord(coord(p0, this.bbTop - p1), this.pointsToPixel);
     }
 
     private findPointListField(

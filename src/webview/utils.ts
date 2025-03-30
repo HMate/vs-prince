@@ -16,11 +16,17 @@ export function range(from: number, to?: number): Array<number> {
     return [...Array(size).keys()].map((val) => from + sign * val);
 }
 
-export type Coord = { x: number; y: number };
+export type Coord = { x: number; y: number; toString?(): string };
 export type Point = [number, number];
 
-export function coord(x: number, y: number): Coord {
-    return { x: x, y: y };
+export function coord(x: number, y: number): Coord & { toString(): string } {
+    return {
+        x: x,
+        y: y,
+        toString() {
+            return `(${this.x}, ${this.y})`;
+        },
+    };
 }
 
 export function addPoint(p0: Point, p1: Point): Point {
@@ -33,29 +39,29 @@ export function asString(coord: Coord): string {
 }
 
 export function negate(coords: Coord): Coord {
-    return { x: -coords.x, y: -coords.y };
+    return coord(-coords.x, -coords.y);
 }
 
 export function mulCoord(start: Coord, multiplier: number): Coord {
-    return { x: multiplier * start.x, y: multiplier * start.y };
+    return coord(multiplier * start.x, multiplier * start.y);
 }
 
 export function addCoord(start: Coord, end: Coord): Coord {
-    return { x: end.x + start.x, y: end.y + start.y };
+    return coord(end.x + start.x, end.y + start.y);
 }
 
 export function diffCoord(start: Coord, end: Coord): Coord {
-    return { x: end.x - start.x, y: end.y - start.y };
+    return coord(end.x - start.x, end.y - start.y);
 }
 
 export function interpCoord(start: Coord, end: Coord, t: number): Coord {
-    return { x: start.x + t * (end.x - start.x), y: start.y + t * (end.y - start.y) };
+    return coord(start.x + t * (end.x - start.x), start.y + t * (end.y - start.y));
 }
 
 export function direction(start: Coord, end: Coord): Coord {
     const d = diffCoord(start, end);
     const magn = Math.sqrt(d.x * d.x + d.y * d.y);
-    return { x: d.x / magn, y: d.y / magn };
+    return coord(d.x / magn, d.y / magn);
 }
 
 export enum MouseButton {
