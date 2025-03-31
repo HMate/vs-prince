@@ -10,6 +10,7 @@ export interface BoxDescription {
     width?: number;
     height?: number;
     centerPosition?: Coord;
+    rootStyle?: any;
     boxStyle?: any;
     textStyle?: any; // Uses text attributes, and not css props
     textPosition?: Coord;
@@ -43,6 +44,7 @@ export class Box {
             this.desc.width = Math.max(calcWidth, Box.defaultMinWidth);
         }
         this.desc.height = description?.height ?? Box.defaultHeight;
+        this.desc.rootStyle = description?.rootStyle;
         this.desc.boxStyle = description?.boxStyle;
         this.desc.textStyle = description?.textStyle;
 
@@ -83,6 +85,10 @@ export class Box {
         if (this.desc.textStyle) {
             // TODO Setting font properties do nothing, come up with soluton to set them dinamically, and not from stylesheet file
             this.nameHolder.css(this.desc.textStyle);
+        }
+        if (this.desc.rootStyle) {
+            // TODO Setting font properties do nothing, come up with soluton to set them dinamically, and not from stylesheet file
+            this.root.css(this.desc.rootStyle);
         }
 
         this.builder.addChildToRoot(this.root);

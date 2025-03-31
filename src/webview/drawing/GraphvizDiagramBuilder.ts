@@ -157,7 +157,11 @@ export class GraphVizDiagramBuilder {
     }
 
     private addPackage(packageName: string, members: Array<string>) {
-        const b = this.baseBuilder.createBox({ name: packageName, boxStyle: { fill: this.packageColor } });
+        const b = this.baseBuilder.createPackageBox({
+            name: packageName,
+            boxStyle: { fill: this.packageColor },
+            rootStyle: { overflow: "visible" },
+        });
         this.packageBoxes[packageName] = b;
 
         let packageDescription = `  subgraph ${this.toDotName(packageName)} {\n`;
