@@ -33,6 +33,12 @@ export class WebviewStateHandler {
     }
 
     messageToHost(message: string): void {
+        console.log(`Sending message to host: ${message}`);
         this.vscode.postMessage({ command: "message", text: message });
+    }
+
+    eventToHost(eventName: string, message: string): void {
+        console.log(`Sending event to host: ${eventName} - ${message}`);
+        this.vscode.postMessage({ command: eventName, text: message });
     }
 }

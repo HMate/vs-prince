@@ -37,22 +37,27 @@ export function entrypoint(mediaUri: string): void {
 
     showLoadingElement();
     TextToSVG.load(`${mediaUri}/${RobotoFont}`, (err: any, tts: TextToSVG | null) => {
+        console.log("load textToSvg finished");
         if (err || tts == null) {
             console.error(`Error while loading opentype text: ${err} | ${tts}`);
             return;
         }
         initVisualizationBuilder("prince-svg", tts, viewState);
+        viewState.eventToHost("viewReady", "View is ready");
     });
 }
 
 function initVisualizationBuilder(svgId: string, tts: TextToSVG, viewState: WebviewStateHandler) {
+    console.log("initVisualizationBuilder");
     baseBuilder = new GraphVisualizationBuilder(svgId, tts);
     baseBuilder.initCamera(saveViewState);
     baseBuilder.registerNodeMovementCallback(saveViewState);
 
     if (viewState.hasState()) {
+        console.log("init - has state");
         const state = viewState.getState();
         if (state != null && state.version === CURRENT_VIEW_STATE_VERSION) {
+            console.log("init - deserializing previous state");
             baseBuilder.deserialize(state.sceneData);
             baseBuilder.setCamera(state.cameraState);
             hideLoadingElement();

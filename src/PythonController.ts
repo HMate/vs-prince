@@ -8,13 +8,8 @@ import { Logger } from "@prince/Logger";
 export class PythonController {
     public constructor(private readonly logger: Logger) {}
 
-    public async drawPythonDependencies(panel: vscode.WebviewPanel): Promise<void> {
+    public async drawPythonDependencies(editor: vscode.TextEditor, panel: vscode.WebviewPanel): Promise<void> {
         panel.webview.postMessage({ command: "show-loading" });
-        const editor = vscode.window.activeTextEditor;
-        if (editor == null) {
-            vscode.window.showInformationMessage("No active editor selected to show dependencies for.");
-            return;
-        }
         this.logger.log(`Start drawing dependencies for ${editor.document.fileName}`);
         const start = performance.now();
 

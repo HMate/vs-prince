@@ -18,16 +18,26 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const disposable = vscode.commands.registerCommand("vs-prince.visualize-py-deps", async () => {
         try {
+            const editor = vscode.window.activeTextEditor;
+            if (editor == null) {
+                vscode.window.showInformationMessage("No active editor selected to show dependencies for.");
+                return;
+            }
+
             if (app.panel == null) {
                 const workspaceUris = vscode.workspace.workspaceFolders?.map((dir) => dir.uri) ?? [];
                 app.panel = vscode.window.createWebviewPanel("princeViz", "Prince", vscode.ViewColumn.Active, {
                     enableScripts: true,
                     localResourceRoots: [app.mediaUri].concat(workspaceUris),
                 });
-                app.panel.webview.onDidReceiveMessage((message) => {
+                app.panel.webview.onDidReceiveMessage(async (message) => {
                     switch (message.command) {
                         case "message":
                             logger.log(message.text);
+                            break;
+                        case "viewReady":
+                            logger.log(message.text);
+                            await pythonController.drawPythonDependencies(editor, app.panel!);
                             break;
                         default:
                             break;
@@ -35,11 +45,9 @@ export function activate(context: vscode.ExtensionContext): void {
                 });
 
                 app.initPanel();
-
-                await pythonController.drawPythonDependencies(app.panel);
             } else {
                 app.panel.reveal(vscode.window.activeTextEditor?.viewColumn);
-                await pythonController.drawPythonDependencies(app.panel);
+                await pythonController.drawPythonDependencies(editor, app.panel);
             }
         } catch (error) {
             if (error instanceof Error) {
