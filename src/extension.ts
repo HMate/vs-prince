@@ -35,6 +35,10 @@ export function activate(context: vscode.ExtensionContext): void {
                         case "message":
                             logger.log(message.text);
                             break;
+                        case "errorMessage":
+                            logger.log(message.text);
+                            vscode.window.showErrorMessage(message.text);
+                            break;
                         case "viewReady":
                             logger.log(message.text);
                             await pythonController.drawPythonDependencies(editor, app.panel!);

@@ -5,9 +5,11 @@ import "@ww/webview-style.scss";
 import "@svgdotjs/svg.draggable.js";
 
 import { GraphVisualizationBuilder } from "@ww/drawing/GraphVisualizationBuilder";
-import { BaseMessage, DependencyGraphDescriptor, DrawDependenciesMessage } from "@ww/extensionMessages";
+import { BaseMessage, DrawDependenciesMessage } from "@ww/extensionMessages";
+import { DependencyGraphDescriptor } from "@ww/scene/DependencyTypes";
 import { drawDependencies } from "@ww/drawing/DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "@ww/WebviewStateHandler";
+import { DependencySceneManager } from "@prince/webview/scene/DependencySceneManager";
 
 /** TODO - future features:
  * - Use GoJS!
@@ -66,26 +68,37 @@ function initVisualizationBuilder(svgId: string, tts: TextToSVG, viewState: Webv
 }
 
 export async function onExtensionMessage(message: BaseMessage): Promise<void> {
-    console.log("Got message " + message.command);
-    if (baseBuilder == null) {
-        console.log(`Base builder should not be undefined: ${baseBuilder}`);
-        return;
-    }
+    try {
+        console.log("Got message " + message.command);
+        if (baseBuilder == null) {
+            console.log(`Base builder should not be undefined: ${baseBuilder}`);
+            return;
+        }
 
-    if (message.command === "draw-dependencies") {
-        const descriptor = (message as DrawDependenciesMessage).data;
-        console.time("Time DrawDependencies");
-        await handleDrawDependenciesMessage(descriptor);
-        console.timeEnd("Time DrawDependencies");
-        console.time("Time SaveViewState");
+        if (message.command === "draw-dependencies") {
+            const descriptor = (message as DrawDependenciesMessage).data;
+
+            console.time("Time DependencySceneManager");
+            const sceneDescriptor = new DependencySceneManager().hideStandardLibrary(descriptor);
+            console.timeEnd("Time DependencySceneManager");
+
+            console.time("Time DrawDependencies");
+            await handleDrawDependenciesMessage(sceneDescriptor);
+            console.timeEnd("Time DrawDependencies");
+
+            console.time("Time SaveViewState");
+            hideLoadingElement();
+            saveViewState();
+            console.timeEnd("Time SaveViewState");
+        } else if (message.command === "show-loading") {
+            showLoadingElement();
+            viewState.clearState();
+        } else {
+            console.log(`Unknown message command: ${message.command}`);
+        }
+    } catch (err: any) {
         hideLoadingElement();
-        saveViewState();
-        console.timeEnd("Time SaveViewState");
-    } else if (message.command === "show-loading") {
-        showLoadingElement();
-        viewState.clearState();
-    } else {
-        console.log(`Unknown message command: ${message.command}`);
+        viewState.errorMessageToHost(`Got error during ${message.command}: ${err.stack}`);
     }
 }
 

@@ -1,6 +1,6 @@
 import { Graphviz } from "@hpcc-js/wasm/graphviz";
 
-import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { DependencyGraphDescriptor, PackageDescriptor } from "@ww/scene/DependencyTypes";
 import { coord, Coord, mulCoord } from "@ww/utils";
 import { WebviewStateHandler } from "@ww/WebviewStateHandler";
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
@@ -39,7 +39,7 @@ interface GraphVizClusterObject {
     lheight: string; // floating number as string, in inches
     lp: string; // 2 comma separated floats: label text center point
     lwidth: string; // floating number as string, in inches
-    bb: string; // 4 comma separated floats in points unit: llx,lly,urx,ury - lowerleft, upperright
+    bb?: string; // 4 comma separated floats in points unit: llx,lly,urx,ury - lowerleft, upperright
     nodesep: string; // floating number
     rankdir: "LR" | "TD";
     ranksep: number; // floating number
@@ -156,7 +156,7 @@ export class GraphVizDiagramBuilder {
         this.edgeId++;
     }
 
-    private addPackage(packageName: string, members: Array<string>) {
+    private addPackage(packageName: string, packageDesc: PackageDescriptor) {
         const b = this.baseBuilder.createPackageBox({
             name: packageName,
             boxStyle: { fill: this.packageColor },
@@ -166,7 +166,7 @@ export class GraphVizDiagramBuilder {
 
         let packageDescription = `  subgraph ${this.toDotName(packageName)} {\n`;
         packageDescription += `    cluster=true; label="${packageName}"`;
-        for (const member of members) {
+        for (const member of packageDesc.modules) {
             packageDescription += `    ${this.toDotName(member)};\n`;
         }
         packageDescription += `  }\n`;
@@ -313,6 +313,11 @@ export class GraphVizDiagramBuilder {
 
     private updatePackageFromGraphvizData(node: GraphVizClusterObject) {
         const b = this.packageBoxes[node.label];
+
+        if (node.bb == null) {
+            this.webview.messageToHost(`Missing bounding box for package '${node.label}'`);
+            return b;
+        }
 
         const [left, bottom, right, top] = node.bb.split(",").map((s: string) => parseFloat(s));
         const width = (right - left) * this.pointsToPixel;

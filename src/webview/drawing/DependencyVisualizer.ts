@@ -1,5 +1,5 @@
 import { addCoord, Coord, coord, mulCoord, negate } from "@ww/utils";
-import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { DependencyGraphDescriptor } from "@ww/scene/DependencyTypes";
 import { WebviewStateHandler } from "@ww/WebviewStateHandler";
 import { GraphVizDiagramBuilder } from "./GraphvizDiagramBuilder";
 import { drawDependenciesElk } from "./ElkjsDiagramBuilder";

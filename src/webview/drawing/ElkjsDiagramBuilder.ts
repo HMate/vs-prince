@@ -1,6 +1,6 @@
 import elk, { ElkExtendedEdge, ElkNode } from "elkjs";
 
-import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { DependencyGraphDescriptor } from "@ww/scene/DependencyTypes";
 import { Graph, GraphNode } from "@ww/graph/Graph";
 import { NestedGraph, NestedTreeLayout } from "@ww/graph/layout/nestedTree/NestedTreeLayout";
 import { Coord, addCoord } from "@ww/utils";

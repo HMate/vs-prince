@@ -1,4 +1,4 @@
-import { DependencyGraphDescriptor } from "@ww/extensionMessages";
+import { DependencyGraphDescriptor } from "@ww/scene/DependencyTypes";
 import { Graph, NodeId, EdgeId } from "@ww/graph/Graph";
 import { GraphLayoutEngine } from "@ww/graph/GraphLayoutEngine";
 import { GraphVisualizationBuilder } from "./GraphVisualizationBuilder";
