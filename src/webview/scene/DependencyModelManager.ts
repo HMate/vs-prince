@@ -1,6 +1,39 @@
 import { DependencyGraphDescriptor, PackageDescriptor, PackageType } from "@ww/scene/DependencyTypes";
 
-export class DependencySceneManager {
+export class DependencyModelManager {
+    public showShallowStandardLibrary(descriptor: DependencyGraphDescriptor): DependencyGraphDescriptor {
+        const builder = new DependencySceneBuilder();
+
+        for (const packageName in descriptor.packages) {
+            const pack = descriptor.packages[packageName];
+            if (pack.type !== PackageType.STANDARD_LIB) {
+                builder.addPackage(packageName, pack);
+            } else {
+                builder.createPackage(packageName, PackageType.STANDARD_LIB);
+            }
+        }
+
+        for (const module of descriptor.nodes) {
+            if (builder.containsPackageOfModule(module)) {
+                builder.addModule(module);
+            }
+        }
+
+        for (const edgeStart in descriptor.edges) {
+            if (!builder.containsModule(edgeStart)) {
+                continue;
+            }
+            const edgeTargets = descriptor.edges[edgeStart];
+            for (const target of edgeTargets) {
+                if (builder.containsModule(target)) {
+                    builder.addEdge(edgeStart, target);
+                }
+            }
+        }
+
+        return builder.build();
+    }
+
     public hideStandardLibrary(descriptor: DependencyGraphDescriptor): DependencyGraphDescriptor {
         const builder = new DependencySceneBuilder();
 

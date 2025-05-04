@@ -22,9 +22,22 @@
         "commands": [
             {
                 "command": "vs-prince.visualize-py-deps",
-                "title": "VS-Prince: Visualize python dependencies"
+                "title": "Visualize python dependencies",
+                "when": "editorLangId == python",
+                "category": "VS-Prince",
+                "icon": "$(circuit-board)"
             }
-        ]
+        ],
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "vs-prince.visualize-py-deps",
+                    "when": "editorLangId == python",
+                    "icon": "$(circuit-board)",
+                    "group": "navigation"
+                }
+            ]
+        }
     },
     "activationEvents": [
         "onWebviewPanel:princeViz"

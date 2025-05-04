@@ -24,7 +24,8 @@ export class PythonController {
             editor.document.fileName,
             "--dm",
             "--cache",
-            cachePath
+            cachePath,
+            "--shallow-std" // TODO: This should be controlled from UI menu or buttons
         );
         let deps = {};
         try {

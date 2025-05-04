@@ -9,19 +9,19 @@ import { BaseMessage, DrawDependenciesMessage } from "@ww/extensionMessages";
 import { DependencyGraphDescriptor } from "@ww/scene/DependencyTypes";
 import { drawDependencies } from "@ww/drawing/DependencyVisualizer";
 import { CURRENT_VIEW_STATE_VERSION, WebviewStateHandler } from "@ww/WebviewStateHandler";
-import { DependencySceneManager } from "@prince/webview/scene/DependencySceneManager";
+import { DependencyModelManager } from "@prince/webview/scene/DependencyModelManager";
 
 /** TODO - future features:
- * - Use GoJS!
- * - Highlight node parents/children with different colors if node is selected
- * - Handle Ctrl+Z to undo last action - currently that is only node dragging
- * - Create an entrypoint if a node was moved, the edges are updated, but the nodes remain fixed.
- * - Draw parent nodes for the group nodes
- * - Feature: Draw node layers by module structure - modules in project | 3rd party library modules | standard modules
- *   - Also compound node for modules containing further files?
- * - Feature: User can choose a layout that is not compound
- * - Feature: Select nodes. Highlight them and their parents/children.
  * - Feature: Expandable and closable nodes/group nodes
+ *      - Add vscode menu buttons / webview buttons, and handle with commands / message passing between extension and webview
+ * - Feature: Draw node layers by module structure - modules in project | 3rd party library modules | standard modules
+ *      - Also compound node for modules containing further files?
+ * - Tech - Move dependency model logic entirely to python side? --> Needs "language" server
+ * - Tech - unittest, integration tests. Have to figure out how to test graphs in a sane manner.
+ *      - Or this remains only for message passing / server calling code, and we dont test drawing?
+ * - Feature: Select nodes. Highlight them and their parents/children.
+ * - Handle Ctrl+Z to undo last action - currently that is only node dragging
+ * - Feature: User can choose a layout that is not compound
  * - Feature: Save/Load diagrams to/from files.
  */
 
@@ -69,18 +69,19 @@ function initVisualizationBuilder(svgId: string, tts: TextToSVG, viewState: Webv
 
 export async function onExtensionMessage(message: BaseMessage): Promise<void> {
     try {
-        console.log("Got message " + message.command);
+        viewState.messageToHost("Got message " + message.command);
         if (baseBuilder == null) {
-            console.log(`Base builder should not be undefined: ${baseBuilder}`);
+            viewState.errorMessageToHost(`Base builder should not be undefined: ${baseBuilder}`);
             return;
         }
 
         if (message.command === "draw-dependencies") {
             const descriptor = (message as DrawDependenciesMessage).data;
 
-            console.time("Time DependencySceneManager");
-            const sceneDescriptor = new DependencySceneManager().hideStandardLibrary(descriptor);
-            console.timeEnd("Time DependencySceneManager");
+            console.time("Time DependencyModelManager");
+            // const sceneDescriptor = new DependencyModelManager().hideStandardLibrary(descriptor);
+            const sceneDescriptor = descriptor;
+            console.timeEnd("Time DependencyModelManager");
 
             console.time("Time DrawDependencies");
             await handleDrawDependenciesMessage(sceneDescriptor);
