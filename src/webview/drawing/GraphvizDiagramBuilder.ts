@@ -62,16 +62,60 @@ interface GraphVizEdgeObject {
     _hdraw_: Array<GraphVizEdgeHDrawValue>;
 }
 
+export class GraphvizSvgUnitConverter {
+    // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
+    private readonly pixelToInchesRatio = 1 / 96;
+    private readonly inchToPixelRatio = 96;
+    private readonly pointsToPixelRatio = 1.33;
+    private bbTop = 0;
+
+    public constructor(private readonly webview: WebviewStateHandler) {}
+
+    public loadBoundingBox(bbString: string | undefined): Array<number> | undefined {
+        const boundingBox: Array<number> | undefined = bbString?.split(",").map((x: string) => parseFloat(x)); // llx,lly,urx,ury - lowerleft, upperright
+        if (boundingBox != null) {
+            this.bbTop = boundingBox[3];
+        } else {
+            this.webview.errorMessageToHost(`Failed to parse graphviz bounding box string: '${bbString}'`);
+        }
+        return boundingBox;
+    }
+
+    public graphVizPointToSceneCoord(x: number, y: number): Coord {
+        return mulCoord(coord(x, this.bbTop - y), this.pointsToPixelRatio);
+    }
+
+    public pixelToInches(inValue: number): number {
+        return inValue * this.pixelToInchesRatio;
+    }
+
+    public inchToPixel(inValue: number): number {
+        return inValue * this.inchToPixelRatio;
+    }
+
+    public inchStringToPixel(inValue: string): number {
+        return parseFloat(inValue) * this.inchToPixelRatio;
+    }
+
+    /**
+     * Points to pixel
+     * @param inValue
+     * @returns
+     */
+    public ptsToPx(inValue: number): number {
+        return inValue * this.pointsToPixelRatio;
+    }
+}
+
 export class GraphVizDiagramBuilder {
     private readonly nodeColor = "#66bb11";
     private readonly packageColor = "#faecb6";
 
-    // graphviz json gives width/height in inches, and pos in points. See https://oreillymedia.github.io/Using_SVG/guide/units.html
-    private readonly pixelToInches = 1 / 96;
-    private readonly inchToPixel = 96;
     private readonly pointsToPixel = 1.33;
 
     private bbTop = 0;
+
+    private readonly converter;
 
     private readonly debugBuilder: BaseElementsBuilder;
 
@@ -87,6 +131,7 @@ export class GraphVizDiagramBuilder {
         private readonly webview: WebviewStateHandler,
         private readonly baseBuilder: GraphVisualizationBuilder
     ) {
+        this.converter = new GraphvizSvgUnitConverter(webview);
         this.debugBuilder = new BaseElementsBuilder(baseBuilder);
     }
 
@@ -145,8 +190,8 @@ export class GraphVizDiagramBuilder {
     private addNode(node: string) {
         const b = this.baseBuilder.createBox({ name: node, boxStyle: { fill: this.nodeColor } });
         this.boxes[node] = b;
-        const width = b.width() * this.pixelToInches;
-        const height = b.height() * this.pixelToInches;
+        const width = this.converter.pixelToInches(b.width());
+        const height = this.converter.pixelToInches(b.height());
         this.nodeDotLines.push(`${this.toDotName(node)} [label="${node}" width=${width} height=${height}];`);
     }
 
@@ -199,13 +244,11 @@ export class GraphVizDiagramBuilder {
 
     private moveElementsBasedOnLayout(gvLayout: any) {
         const nodeIds: { [id: number]: string } = {};
-        const boundingBox: Array<number> = gvLayout["bb"]?.split(",").map((x: string) => parseFloat(x)); // llx,lly,urx,ury - lowerleft, upperright
-        this.bbTop = boundingBox[3];
 
-        // TODO: Create proper parsing from gv dot string to graph elements descriptors to avoid
-        // further multiple day debugging sessions because of not remembering gv,svg units, meaning of members etc..
-
-        this.drawDebugUnitScale(boundingBox);
+        const boundingBox = this.converter.loadBoundingBox(gvLayout["bb"]);
+        if (boundingBox != null) {
+            this.drawDebugUnitScale(boundingBox);
+        }
 
         gvLayout.objects?.forEach((v: GraphVizNodeObject | GraphVizClusterObject) => {
             let b;
@@ -252,13 +295,13 @@ export class GraphVizDiagramBuilder {
     private drawDebugUnitScale(boundingBox: Array<number>) {
         const [left, bottom, right, top] = boundingBox;
         this.webview.messageToHost(`GV Bounding box: left: ${left}, bottom: ${bottom}, right: ${right}, top: ${top}`);
-        const bbTop = top * this.pointsToPixel;
+        const bbTop = this.converter.ptsToPx(top);
         const violet = "#BB1199";
         const green = "#119922";
 
         this.debugBuilder.createText(
             "GV Points X",
-            coord(left * this.pointsToPixel + 10, bbTop - bottom * this.pointsToPixel + 10)
+            coord(this.converter.ptsToPx(left) + 10, bbTop - this.converter.ptsToPx(bottom) + 10)
         );
         const bbWidth = right - left;
         const bbXUnit = bbWidth / 20;
@@ -266,8 +309,8 @@ export class GraphVizDiagramBuilder {
             const start = index;
             const end = index + bbXUnit;
             this.debugBuilder.drawLineSegment(
-                coord(start * this.pointsToPixel, bbTop - bottom * this.pointsToPixel),
-                coord(end * this.pointsToPixel, bbTop - bottom * this.pointsToPixel),
+                coord(this.converter.ptsToPx(start), bbTop - this.converter.ptsToPx(bottom)),
+                coord(this.converter.ptsToPx(end), bbTop - this.converter.ptsToPx(bottom)),
                 coord(0, 4),
                 violet,
                 end.toFixed(2).toString()
@@ -276,7 +319,7 @@ export class GraphVizDiagramBuilder {
 
         this.debugBuilder.createText(
             "GV Points Y",
-            coord(left * this.pointsToPixel - 10, (top - bottom) * this.pointsToPixel - 10)
+            coord(this.converter.ptsToPx(left) - 10, this.converter.ptsToPx(top - bottom) - 10)
         );
         const bbHeight = top - bottom;
         const bbYUnit = bbHeight / 20;
@@ -284,8 +327,8 @@ export class GraphVizDiagramBuilder {
             const start = index;
             const end = index + bbYUnit;
             this.debugBuilder.drawLineSegment(
-                coord(left * this.pointsToPixel + 2, bbTop - start * this.pointsToPixel),
-                coord(left * this.pointsToPixel + 2, bbTop - end * this.pointsToPixel),
+                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(start)),
+                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(end)),
                 coord(6, 0),
                 green,
                 end.toFixed(2).toString()
@@ -302,8 +345,8 @@ export class GraphVizDiagramBuilder {
 
     private updateNodeFromGraphvizData(box: Box, node: GraphVizNodeObject) {
         const pos = node.pos.split(",").map((s: string) => parseFloat(s));
-        box.setSize(parseFloat(node.width) * this.inchToPixel, parseFloat(node.height) * this.inchToPixel);
-        const centerPos = this.graphVizPointToSceneCoord(pos[0], pos[1]);
+        box.setSize(this.converter.inchStringToPixel(node.width), this.converter.inchStringToPixel(node.height));
+        const centerPos = this.converter.graphVizPointToSceneCoord(pos[0], pos[1]);
         box.moveCenter(centerPos.x, centerPos.y);
 
         this.webview.messageToHost(
@@ -320,15 +363,15 @@ export class GraphVizDiagramBuilder {
         }
 
         const [left, bottom, right, top] = node.bb.split(",").map((s: string) => parseFloat(s));
-        const width = (right - left) * this.pointsToPixel;
-        const height = (top - bottom) * this.pointsToPixel;
+        const width = this.converter.ptsToPx(right - left);
+        const height = this.converter.ptsToPx(top - bottom);
         b.setSize(width, height);
 
-        const center = this.graphVizPointToSceneCoord((right + left) / 2, (bottom + top) / 2);
+        const center = this.converter.graphVizPointToSceneCoord((right + left) / 2, (bottom + top) / 2);
         b.moveCenter(center.x, center.y);
 
         const [cx, cy] = node.lp.split(",").map((s: string) => parseFloat(s));
-        const labelCenter = this.graphVizPointToSceneCoord(cx, cy);
+        const labelCenter = this.converter.graphVizPointToSceneCoord(cx, cy);
         this.webview.messageToHost(`Package text ${node.label} to ${labelCenter} from (${cx}, ${cy}) gv point`);
         b.moveLabel(labelCenter.x, labelCenter.y);
         return b;
@@ -345,20 +388,16 @@ export class GraphVizDiagramBuilder {
                 `Edge (${edge.name}) points: ${edgePointsOption.points.map((p) => coord(p[0], p[1]))}`
             );
             cps = (edgePointsOption.points as Array<[number, number]>).map((p) => {
-                return this.graphVizPointToSceneCoord(p[0], p[1]);
+                return this.converter.graphVizPointToSceneCoord(p[0], p[1]);
             });
         }
         if (arrowPointsOption && "points" in arrowPointsOption) {
             const arrowCps = (arrowPointsOption.points as Array<[number, number]>).map((p) =>
-                this.graphVizPointToSceneCoord(p[0], p[1])
+                this.converter.graphVizPointToSceneCoord(p[0], p[1])
             );
             cps.push(arrowCps[1]);
         }
         return cps;
-    }
-
-    private graphVizPointToSceneCoord(p0: number, p1: number): Coord {
-        return mulCoord(coord(p0, this.bbTop - p1), this.pointsToPixel);
     }
 
     private findPointListField(

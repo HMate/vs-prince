@@ -32,16 +32,28 @@ export class WebviewStateHandler {
         this.vscode.setState(undefined);
     }
 
+    /**
+     * Logs message to browser console and to vscode output
+     * @param message
+     */
     messageToHost(message: string): void {
         console.log(`Sending message to host: ${message}`);
         this.vscode.postMessage({ command: "message", text: message });
     }
 
+    /**
+     * Logs error message to browser console, to vscode output, and shows error notification.
+     * @param message
+     */
     errorMessageToHost(message: string): void {
-        console.log(`Sending message to host: ${message}`);
+        console.warn(`Sending message to host: ${message}`);
         this.vscode.postMessage({ command: "errorMessage", text: message });
     }
 
+    /**
+     * Sends event to extension
+     * @param message
+     */
     eventToHost(eventName: string, message: string): void {
         console.log(`Sending event to host: ${eventName} - ${message}`);
         this.vscode.postMessage({ command: eventName, text: message });
