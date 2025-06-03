@@ -20,6 +20,7 @@ export class PythonController {
 
         const cachePath = this.findPyprinceCachePath(workspaces);
         const pythonEnv = await this.getPythonEnv(editor);
+        this.logger.log(`Calling pyprince: '${editor.document.fileName} --dm --cache ${cachePath} --shallow-std'`);
         const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(
             editor.document.fileName,
             "--dm",
