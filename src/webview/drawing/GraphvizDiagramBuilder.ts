@@ -254,6 +254,7 @@ export class GraphVizDiagramBuilder {
             let b;
             if (v.label === "\\N") {
                 // This is a new node, that wasn't in the original descriptor. So create a new box for it here.
+                this.webview.messageToHost(`Adding new node '${v.name}'`);
                 b = this.addNodeFromGraphvizData(v as GraphVizNodeObject, nodeIds);
             } else {
                 b = this.boxes[v.label];
@@ -290,50 +291,6 @@ export class GraphVizDiagramBuilder {
                 );
             }
         });
-    }
-
-    private drawDebugUnitScale(boundingBox: Array<number>) {
-        const [left, bottom, right, top] = boundingBox;
-        this.webview.messageToHost(`GV Bounding box: left: ${left}, bottom: ${bottom}, right: ${right}, top: ${top}`);
-        const bbTop = this.converter.ptsToPx(top);
-        const violet = "#BB1199";
-        const green = "#119922";
-
-        this.debugBuilder.createText(
-            "GV Points X",
-            coord(this.converter.ptsToPx(left) + 10, bbTop - this.converter.ptsToPx(bottom) + 10)
-        );
-        const bbWidth = right - left;
-        const bbXUnit = bbWidth / 20;
-        for (let index = left; index < right; index = index + bbXUnit) {
-            const start = index;
-            const end = index + bbXUnit;
-            this.debugBuilder.drawLineSegment(
-                coord(this.converter.ptsToPx(start), bbTop - this.converter.ptsToPx(bottom)),
-                coord(this.converter.ptsToPx(end), bbTop - this.converter.ptsToPx(bottom)),
-                coord(0, 4),
-                violet,
-                end.toFixed(2).toString()
-            );
-        }
-
-        this.debugBuilder.createText(
-            "GV Points Y",
-            coord(this.converter.ptsToPx(left) - 10, this.converter.ptsToPx(top - bottom) - 10)
-        );
-        const bbHeight = top - bottom;
-        const bbYUnit = bbHeight / 20;
-        for (let index = bottom; index < top; index = index + bbYUnit) {
-            const start = index;
-            const end = index + bbYUnit;
-            this.debugBuilder.drawLineSegment(
-                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(start)),
-                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(end)),
-                coord(6, 0),
-                green,
-                end.toFixed(2).toString()
-            );
-        }
     }
 
     private addNodeFromGraphvizData(node: GraphVizNodeObject, nodeIds: { [id: number]: string }) {
@@ -384,10 +341,9 @@ export class GraphVizDiagramBuilder {
         const arrowPointsOption = this.findPointListField(edge["_hdraw_"], "p") as GVDrawPoints | undefined;
 
         if (edgePointsOption && "points" in edgePointsOption) {
-            this.webview.messageToHost(
-                `Edge (${edge.name}) points: ${edgePointsOption.points.map((p) => coord(p[0], p[1]))}`
-            );
-            cps = (edgePointsOption.points as Array<[number, number]>).map((p) => {
+            const edgePoints = edgePointsOption.points as Array<[number, number]>;
+            this.webview.messageToHost(`Edge (${edge.name}) points: ${edgePoints.map((p) => coord(p[0], p[1]))}`);
+            cps = edgePoints.map((p) => {
                 return this.converter.graphVizPointToSceneCoord(p[0], p[1]);
             });
         }
@@ -413,5 +369,49 @@ export class GraphVizDiagramBuilder {
             }
         }
         return undefined;
+    }
+
+    private drawDebugUnitScale(boundingBox: Array<number>) {
+        const [left, bottom, right, top] = boundingBox;
+        this.webview.messageToHost(`GV Bounding box: left: ${left}, bottom: ${bottom}, right: ${right}, top: ${top}`);
+        const bbTop = this.converter.ptsToPx(top);
+        const violet = "#BB1199";
+        const green = "#119922";
+
+        this.debugBuilder.createText(
+            "GV Points X",
+            coord(this.converter.ptsToPx(left) + 10, bbTop - this.converter.ptsToPx(bottom) + 10)
+        );
+        const bbWidth = right - left;
+        const bbXUnit = bbWidth / 20;
+        for (let index = left; index < right; index = index + bbXUnit) {
+            const start = index;
+            const end = index + bbXUnit;
+            this.debugBuilder.drawLineSegment(
+                coord(this.converter.ptsToPx(start), bbTop - this.converter.ptsToPx(bottom)),
+                coord(this.converter.ptsToPx(end), bbTop - this.converter.ptsToPx(bottom)),
+                coord(0, 4),
+                violet,
+                end.toFixed(2).toString()
+            );
+        }
+
+        this.debugBuilder.createText(
+            "GV Points Y",
+            coord(this.converter.ptsToPx(left) - 10, this.converter.ptsToPx(top - bottom) - 10)
+        );
+        const bbHeight = top - bottom;
+        const bbYUnit = bbHeight / 20;
+        for (let index = bottom; index < top; index = index + bbYUnit) {
+            const start = index;
+            const end = index + bbYUnit;
+            this.debugBuilder.drawLineSegment(
+                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(start)),
+                coord(this.converter.ptsToPx(left) + 2, bbTop - this.converter.ptsToPx(end)),
+                coord(6, 0),
+                green,
+                end.toFixed(2).toString()
+            );
+        }
     }
 }
