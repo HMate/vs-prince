@@ -29,6 +29,8 @@ Consists of:
         - Calls into and mediates between webview and language servers
     - Technology 
         - Typescript
+        - Tooling:
+            - npm 10.8.2
 - Webview
     - Description
         - Draw the visualizations - See layout_engine_overview.md
@@ -57,6 +59,9 @@ and graph drawing.
 I think I will need to make at least end-to-end tests to handle these.
 
 Candidates:
+- vscode-extester
+    - https://code.visualstudio.com/api/working-with-extensions/testing-extension
+    - https://marketplace.visualstudio.com/items?itemName=ms-vscode.extension-test-runner
 - Playwright
 - Percy 
     - Seems to be specialized for screenshot comparison for websites.

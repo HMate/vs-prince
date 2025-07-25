@@ -1,7 +1,10 @@
 .vscode/**
 .vscode-test/**
+build/**
+scripts/**
 out/**
 src/**
+docs/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -9,3 +12,6 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+ReleaseProcess.md
+nodemon.json
