@@ -1,9 +1,9 @@
-const { defineConfig } = require("@vscode/test-cli");
+import { defineConfig } from "@vscode/test-cli";
 
 // docs:
 // https://github.com/microsoft/vscode-test-cli
 // https://mochajs.org/api/mocha
-module.exports = defineConfig([
+export default defineConfig([
     {
         label: "unitTests",
         files: "out/test/unit-tests/**/*.test.js",
@@ -18,6 +18,7 @@ module.exports = defineConfig([
         files: "src/test/ui-tests/*.test.ts",
         workspaceFolder: "./test-workspace",
         mocha: {
+            require: ["ts-node/register"],
             ui: "tdd",
             timeout: "20s",
         },

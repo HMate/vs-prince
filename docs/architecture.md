@@ -69,3 +69,22 @@ Candidates:
         much for my use case.
 - Puppeteer - Its seems to not support VsCode
 - Cypress - ? Seems too heavyweight
+
+## Building
+
+in short for development:
+- run `npm run link-pyprince`
+- run `npm run compile`
+
+for production package:
+- run `npm run package`
+
+Two ways to compile ts to js: run tsc or webpack.
+Because we do a bunch of different kind of bundling, css transpiling, etc we use webpack.
+For ui-tests we currently use tsc, because it was easier to set up with ts-node. Later this may need to be changed to webpack too.
+
+The codebase uses ESM style import-export (because that is given by typescript), 
+but compiles to CommonJS style require imports, because that is recommended by VSCode.
+For ts-node we do the conversion to commonjs in tsconfig. 
+In webpack we do it in the last step in node-extension.webpack.config.js.
+Before that the tsconfig still compiles the ts files into js files with esm imports. Why? I'm not sure, but is works for now.
