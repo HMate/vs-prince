@@ -30,4 +30,5 @@
     "files.readonlyInclude": {
         "node_modules/**": true
     },
+    "npm.exclude": "**/.wdio-vscode-service/**",
 }

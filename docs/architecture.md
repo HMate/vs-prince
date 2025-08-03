@@ -59,16 +59,27 @@ and graph drawing.
 I think I will need to make at least end-to-end tests to handle these.
 
 Candidates:
+- wdio-vscode-service
+    - https://github.com/webdriverio-community/wdio-vscode-service
+    - This is a vscode wrapper around WebdriverIO
 - vscode-extester
     - https://code.visualstudio.com/api/working-with-extensions/testing-extension
     - https://marketplace.visualstudio.com/items?itemName=ms-vscode.extension-test-runner
+    - https://github.com/microsoft/vscode-test-cli/blob/main/README.md -> config options
+    - I had to create a separate build step for test code so it can be loaded with vscextest + mocha + 
 - Playwright
+    - Turned out vscode-extester + playwright cannot create a webview that I can communicate with
 - Percy 
     - Seems to be specialized for screenshot comparison for websites.
     - Gives a whole backend, review pipeline for it - That is probably too 
         much for my use case.
 - Puppeteer - Its seems to not support VsCode
 - Cypress - ? Seems too heavyweight
+
+Testing library:
+- Mocha - seems good enough
+    - I either have to compile to js files, or use ts-node or tsx to interpret ts test files
+- Jest - Not sure about the difference to mocha
 
 ## Building
 
