@@ -54,6 +54,7 @@ export const config: WebdriverIO.Config = {
         {
             browserName: "vscode",
             browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
+            "wdio:enforceWebDriverClassic": true,
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: __dirname,
@@ -72,7 +73,8 @@ export const config: WebdriverIO.Config = {
     // Define all options that are relevant for the WebdriverIO instance here
     //
     // Level of logging verbosity: trace | debug | info | warn | error | silent
-    logLevel: "info",
+    logLevel: "trace",
+    outputDir: __dirname + "/logs",
     //
     // Set specific log levels per logger
     // loggers:

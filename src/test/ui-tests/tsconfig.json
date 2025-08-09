@@ -16,8 +16,7 @@
             "webdriverio/async",
             "@wdio/mocha-framework",
             "expect-webdriverio",
-            "wdio-vscode-service",
-            "@wdio/types/globals"
+            "wdio-vscode-service"
         ],
         "esModuleInterop": true,
         "plugins": [{ "name": "typescript-plugin-css-modules" }],

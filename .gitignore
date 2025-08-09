@@ -3,6 +3,7 @@ dist
 media
 node_modules
 .vscode-test/
+logs/
 .wdio-vscode-service/
 *.vsix
 

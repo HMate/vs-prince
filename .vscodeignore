@@ -5,6 +5,7 @@ scripts/**
 out/**
 src/**
 docs/**
+logs/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
