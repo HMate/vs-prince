@@ -11,7 +11,9 @@ suite("Extension Test Suite", () => {
         }, "from wdio and vsprince !!! -__-");
 
         const notifs = await workbench.getNotifications();
-        console.log(await notifs[0].getMessage());
+        const message = await notifs[0].getMessage();
+        console.log(message);
+        expect(message).to.eq("Start all tests. from wdio and vsprince !!! -__- !");
     });
 
     test("Sample test", () => {
