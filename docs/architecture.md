@@ -62,11 +62,13 @@ Candidates:
 - wdio-vscode-service
     - https://github.com/webdriverio-community/wdio-vscode-service
     - This is a vscode wrapper around WebdriverIO
+    - I use this for end-to-end system tests now.
 - vscode-extester
     - https://code.visualstudio.com/api/working-with-extensions/testing-extension
     - https://marketplace.visualstudio.com/items?itemName=ms-vscode.extension-test-runner
     - https://github.com/microsoft/vscode-test-cli/blob/main/README.md -> config options
-    - I had to create a separate build step for test code so it can be loaded with vscextest + mocha + 
+    - I had to create a separate build step for test code so it can be loaded with vscextest + mocha
+    - This could be okay for unittests, if I need vscode lib calls, but mocha may be enough in itself
 - Playwright
     - Turned out vscode-extester + playwright cannot create a webview that I can communicate with
 - Percy 
@@ -80,6 +82,9 @@ Testing library:
 - Mocha - seems good enough
     - I either have to compile to js files, or use ts-node or tsx to interpret ts test files
 - Jest - Not sure about the difference to mocha
+
+Assertion library:
+- Chai
 
 ## Building
 

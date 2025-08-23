@@ -18,5 +18,8 @@
         "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
         "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */
     },
-    "exclude": ["node_modules", ".vscode-test"]
+    "include": [
+        "src/**/*"
+    ],
+    "exclude": ["node_modules", ".wdio-vscode-service", "src/test/**/*"]
 }

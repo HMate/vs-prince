@@ -1,3 +1,7 @@
+import path from "path";
+
+import {} from "wdio-vscode-service";
+
 export const config: WebdriverIO.Config = {
     //
     // ====================
@@ -53,17 +57,20 @@ export const config: WebdriverIO.Config = {
     capabilities: [
         {
             browserName: "vscode",
-            browserVersion: "stable", // also possible: "insiders" or a specific version e.g. "1.80.0"
+            browserVersion: "1.102.3", // possible: "stable", "insiders" or version e.g. "1.80.0"
             "wdio:enforceWebDriverClassic": true,
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: __dirname,
-                // optional VS Code settings
+                workspacePath: `${__dirname}/test-workspace`,
                 userSettings: {
                     "editor.fontSize": 14,
                 },
+                vscodeArgs: {
+                    disableExtensions: false,
+                },
             },
-        },
+        } as WebdriverIO.WDIOVSCodeServiceOptions,
     ],
 
     //
@@ -74,7 +81,7 @@ export const config: WebdriverIO.Config = {
     //
     // Level of logging verbosity: trace | debug | info | warn | error | silent
     logLevel: "trace",
-    outputDir: __dirname + "/logs",
+    outputDir: path.join(__dirname, "test-logs"),
     //
     // Set specific log levels per logger
     // loggers:

@@ -2,9 +2,14 @@ out
 dist
 media
 node_modules
-.vscode-test/
-logs/
-.wdio-vscode-service/
 *.vsix
+
+# Testing
+.vscode-test/
+test-logs/
+test-screenshots/
+test-workspace/.pyprince/
+.wdio-vscode-service/
+
 
 docs/temp/

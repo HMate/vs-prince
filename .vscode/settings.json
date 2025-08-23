@@ -31,4 +31,6 @@
         "node_modules/**": true
     },
     "npm.exclude": "**/.wdio-vscode-service/**",
+    "editor.wordWrap": "on",
+    "editor.wordWrapColumn": 120,
 }

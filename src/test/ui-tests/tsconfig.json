@@ -5,15 +5,16 @@
         "target": "es2017",
         "lib": ["es2021", "DOM"],
         "sourceMap": true,
-        "rootDir": "../../src",
+        "rootDir": "../../../src",
+        "outDir": "out/test",
         "strict": true /* enable all strict type-checking options */,
         "paths": {
-          "@prince/*": ["../../src/*"],
-          "@ww/*": ["../../src/webview/*"],
+          "@prince/*": ["../../../src/*"],
+          "@ww/*": ["../../../src/webview/*"],
         },
         "types": [
             "node",
-            "webdriverio/async",
+            "@wdio/globals/types",
             "@wdio/mocha-framework",
             "expect-webdriverio",
             "wdio-vscode-service"
@@ -24,5 +25,8 @@
         "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
         "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */
     },
-    "exclude": ["node_modules", ".vscode-test"]
+    "include": [
+        "**/*"
+    ],
+    "exclude": ["node_modules", ".wdio-vscode-service"]
 }

@@ -5,7 +5,6 @@ scripts/**
 out/**
 src/**
 docs/**
-logs/**
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md
@@ -13,6 +12,10 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+test-logs/**
+test-screenshots/**
+test-workspace/**
 
 ReleaseProcess.md
 nodemon.json
