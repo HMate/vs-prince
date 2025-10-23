@@ -18,16 +18,7 @@ suite("Extension Test Suite", () => {
     });
 
     test("Workspace test", async () => {
-        await browser.executeWorkbench(async (vscode) => {
-            await vscode.commands.executeCommand("workbench.extensions.installExtension", "ms-python.python");
-        });
-
-        await browser.executeWorkbench(async (vscode) => {
-            const pythonExtension = vscode.extensions.getExtension("ms-python.python");
-            if (pythonExtension && !pythonExtension.isActive) {
-                await pythonExtension.activate();
-            }
-        });
+        await installPython();
 
         // TODO: Delete, or do something about pyprince cache file
 
@@ -41,6 +32,7 @@ suite("Extension Test Suite", () => {
             vscode.commands.executeCommand("vs-prince.visualize-py-deps");
         });
 
+        console.log("Waiting 5 sec for visualize command to run...");
         await browser.pause(5000);
         /*
         await browser.waitUntil(async () => {
@@ -51,4 +43,17 @@ suite("Extension Test Suite", () => {
 
         await browser.saveScreenshot("./test-screenshots/workspace-test.png");
     });
+
+    async function installPython() {
+        await browser.executeWorkbench(async (vscode) => {
+            await vscode.commands.executeCommand("workbench.extensions.installExtension", "ms-python.python");
+        });
+
+        await browser.executeWorkbench(async (vscode) => {
+            const pythonExtension = vscode.extensions.getExtension("ms-python.python");
+            if (pythonExtension && !pythonExtension.isActive) {
+                await pythonExtension.activate();
+            }
+        });
+    }
 });

@@ -78,7 +78,7 @@ Candidates:
 - Puppeteer - Its seems to not support VsCode
 - Cypress - ? Seems too heavyweight
 
-Testing library:
+Testing library/Frameowork:
 - Mocha - seems good enough
     - I either have to compile to js files, or use ts-node or tsx to interpret ts test files
 - Jest - Not sure about the difference to mocha
