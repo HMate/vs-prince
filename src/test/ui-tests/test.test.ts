@@ -29,16 +29,21 @@ suite("Extension Test Suite", () => {
             await vscode.commands.executeCommand("vs-prince.visualize-py-deps");
         });
 
-        console.log("Waiting 100 sec for visualize command to run...");
-        await browser.pause(1_000_000);
-        /*
-        await browser.waitUntil(async () => {
-            const panels = await browser.$$('div.webview');
-            return panels.length > 0;
-        }, { timeout: 5000 });
-        */
+        await browser.switchFrame($("iframe.webview"));
+        await browser.switchFrame($('iframe[id="active-frame"]'));
 
-        await browser.saveScreenshot("./test-screenshots/workspace-test.png");
+        await browser.waitUntil(
+            async () => {
+                const svgRoot: ChainablePromiseElement = await browser.$("#prince-svg");
+                const elems = await svgRoot.$$("rect").getElements();
+                return elems.length > 5;
+            },
+            { timeout: 5000, interval: 500 }
+        );
+
+        const mismatchPercentage = await browser.checkScreen("screen-test");
+        console.log(`Mismatch percentage: ${mismatchPercentage} %`);
+        expect(mismatchPercentage).to.be.lessThan(0.1);
     });
 
     async function installPython() {

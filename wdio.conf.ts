@@ -1,6 +1,7 @@
 import path from "path";
 
 import {} from "wdio-vscode-service";
+import type { VisualServiceOptions } from '@wdio/visual-service';
 
 export const config: WebdriverIO.Config = {
     //
@@ -121,7 +122,16 @@ export const config: WebdriverIO.Config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ["vscode"],
+    services: [
+        "vscode",
+        [
+            "visual",
+            {
+                baselineFolder: `${__dirname}/test-screenshots/baseline`,
+                screenshotPath: `${__dirname}/test-screenshots/current`
+            } satisfies VisualServiceOptions,
+        ],
+    ],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber

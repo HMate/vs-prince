@@ -14,10 +14,11 @@
         },
         "types": [
             "node",
+            "wdio-vscode-service",
+            "expect-webdriverio",
             "@wdio/globals/types",
             "@wdio/mocha-framework",
-            "expect-webdriverio",
-            "wdio-vscode-service"
+            "@wdio/visual-service"
         ],
         "esModuleInterop": true,
         "plugins": [{ "name": "typescript-plugin-css-modules" }],

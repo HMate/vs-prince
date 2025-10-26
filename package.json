@@ -83,6 +83,7 @@
         "@wdio/mocha-framework": "^9.18.0",
         "@wdio/spec-reporter": "^9.18.0",
         "@wdio/types": "^9.19.1",
+        "@wdio/visual-service": "^9.0.0",
         "chai": "^4.3.4",
         "clean-webpack-plugin": "^3.0.0",
         "copy-webpack-plugin": "^9.1.0",
