@@ -20,14 +20,20 @@ export class PythonController {
 
         const cachePath = this.findPyprinceCachePath(workspaces);
         const pythonEnv = await this.getPythonEnv(editor);
-        this.logger.log(`Calling pyprince: '${editor.document.fileName} --dm --cache ${cachePath} --shallow-std'`);
-        const result = new PyPrince(pythonEnv?.executable.uri?.fsPath).callPrince(
+
+        await this.printPrinceInfo(pythonEnv?.executable.uri?.fsPath, "version");
+
+        // TODO: --shallow-std should be controlled from UI menu or buttons
+        const result = this.callPrince(
+            pythonEnv?.executable.uri?.fsPath,
+            "parse",
             editor.document.fileName,
             "--dm",
             "--cache",
             cachePath,
-            "--shallow-std" // TODO: This should be controlled from UI menu or buttons
+            "--shallow-std"
         );
+
         let deps = {};
         try {
             deps = JSON.parse(result);
@@ -68,5 +74,29 @@ export class PythonController {
         const pythonEnvPath = pythonApi.environments.getActiveEnvironmentPath(editor.document.uri);
         const pythonEnv = await pythonApi.environments.resolveEnvironment(pythonEnvPath);
         return pythonEnv;
+    }
+
+    private async printPrinceInfo(pythonPath: string | undefined, ...args: string[]) {
+        const princeClient = new PyPrince(pythonPath);
+        const fileInfo = await princeClient.getPrinceInfo();
+        if (fileInfo instanceof Error) {
+            this.logger.log(`Failed to get pyprince info: ${fileInfo.message}`);
+            return;
+        }
+        this.logger.log(`Using pyprince modified at ${fileInfo.mtime}`);
+        const result = this.callPrince(pythonPath, ...args);
+        this.logger.log(`Using pyprince version ${result} modified at ${fileInfo.mtime}`);
+    }
+
+    private callPrince(pythonPath: string | undefined, ...args: string[]): string {
+        try {
+            this.logger.log(`Calling pyprince: '${args.join(" ")}'`);
+            const princeClient = new PyPrince(pythonPath);
+            const result = princeClient.callPrince(...args);
+            return result;
+        } catch (error) {
+            this.logger.log(`ERROR calling pyprince: ${error}`);
+            throw error;
+        }
     }
 }

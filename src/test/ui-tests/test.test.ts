@@ -1,9 +1,6 @@
 import { expect } from "chai";
 import { browser } from "@wdio/globals";
 
-// import * as myExtension from '../../extension';
-// import * as vscode from "vscode";
-
 suite("Extension Test Suite", () => {
     test("Message test", async () => {
         const workbench = await browser.getWorkbench();
@@ -22,18 +19,18 @@ suite("Extension Test Suite", () => {
 
         // TODO: Delete, or do something about pyprince cache file
 
-        await browser.executeWorkbench((vscode) => {
+        await browser.executeWorkbench(async (vscode) => {
             const wsFolder = vscode.workspace.workspaceFolders[0];
             console.log("Opening file: " + wsFolder.uri.fsPath + "/main.py");
-            vscode.window.showTextDocument(vscode.Uri.joinPath(wsFolder.uri, "main.py"));
+            await vscode.window.showTextDocument(vscode.Uri.joinPath(wsFolder.uri, "main.py"));
         });
 
-        await browser.executeWorkbench((vscode) => {
-            vscode.commands.executeCommand("vs-prince.visualize-py-deps");
+        await browser.executeWorkbench(async (vscode) => {
+            await vscode.commands.executeCommand("vs-prince.visualize-py-deps");
         });
 
-        console.log("Waiting 5 sec for visualize command to run...");
-        await browser.pause(5000);
+        console.log("Waiting 100 sec for visualize command to run...");
+        await browser.pause(1_000_000);
         /*
         await browser.waitUntil(async () => {
             const panels = await browser.$$('div.webview');
