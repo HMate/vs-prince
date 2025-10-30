@@ -4,7 +4,7 @@ import { browser } from "@wdio/globals";
 suite("Extension Test Suite", () => {
     test("Message test", async () => {
         const workbench = await browser.getWorkbench();
-        await browser.executeWorkbench((vscode, param1) => {
+        await browser.executeWorkbench(async (vscode, param1) => {
             vscode.window.showInformationMessage(`Start all tests. ${param1} !`);
         }, "from wdio and vsprince !!! -__-");
 
@@ -17,8 +17,19 @@ suite("Extension Test Suite", () => {
     test("Workspace test", async () => {
         await installPython();
 
-        // TODO: Delete, or do something about pyprince cache file
+        const workbench = await browser.getWorkbench();
+        try {
+            const existingNotifs = await workbench.getNotifications();
+            console.log(`existingNotifs: ${existingNotifs.length}`);
+            // Note: hiding notifications only works if the test window has focus. I'm not sure why, or how to fix this
+            for (const notif of existingNotifs) {
+                await notif.dismiss();
+            }
+        } catch (e) {
+            // Ignore if no notifications to clear
+        }
 
+        // TODO: Delete, or do something about pyprince cache file
         await browser.executeWorkbench(async (vscode) => {
             const wsFolder = vscode.workspace.workspaceFolders[0];
             console.log("Opening file: " + wsFolder.uri.fsPath + "/main.py");
@@ -41,9 +52,11 @@ suite("Extension Test Suite", () => {
             { timeout: 5000, interval: 500 }
         );
 
-        const mismatchPercentage = await browser.checkScreen("screen-test");
-        console.log(`Mismatch percentage: ${mismatchPercentage} %`);
-        expect(mismatchPercentage).to.be.lessThan(0.1);
+        await browser.saveScreen("screen-test");
+        const svgRoot = await browser.$("#prince-svg");
+        const elementMismatchPercentage = await browser.checkElement(svgRoot, "element-test");
+        console.log(`Element mismatch percentage: ${elementMismatchPercentage} %`);
+        expect(elementMismatchPercentage).to.be.lessThan(0.1);
     });
 
     async function installPython() {
