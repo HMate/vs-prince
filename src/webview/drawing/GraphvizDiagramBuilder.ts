@@ -219,7 +219,7 @@ export class GraphVizDiagramBuilder {
     }
 
     private toDotName(name: string): string {
-        return name.replaceAll(".", "_");
+        return name.replaceAll(".", "_").replaceAll("-", "_");
     }
 
     private createDotRepresentation(): string {
