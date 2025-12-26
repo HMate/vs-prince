@@ -3,6 +3,12 @@ import { browser } from "@wdio/globals";
 import { Workbench } from "wdio-vscode-service";
 
 suite("Extension Test Suite", () => {
+    let testContext: Mocha.Context;
+
+    suiteSetup(function () {
+        testContext = this;
+    });
+
     test("Message test", async function () {
         const workbench = await browser.getWorkbench();
         await browser.executeWorkbench(async (vscode, param1) => {
@@ -11,7 +17,7 @@ suite("Extension Test Suite", () => {
 
         const notifs = await workbench.getNotifications();
         const message = await notifs[0].getMessage();
-        console.log(message);
+        logTestMessage(message);
         expect(message).to.eq("Start all tests. from wdio and vsprince !!! -__- !");
     });
 
@@ -47,7 +53,7 @@ suite("Extension Test Suite", () => {
         await browser.saveScreen("screen-test");
         const svgRoot = await browser.$("#prince-svg");
         const elementMismatchPercentage = await browser.checkElement(svgRoot, "element-test");
-        console.log(`Element mismatch percentage: ${elementMismatchPercentage} %`);
+        logTestMessage(`Element mismatch percentage: ${elementMismatchPercentage} %`);
         expect(elementMismatchPercentage).to.be.lessThan(0.1);
     });
 
@@ -72,20 +78,20 @@ suite("Extension Test Suite", () => {
     async function waitUntilNotificationsDisappear(workbench: Workbench) {
         try {
             const standaloneNotifs = await workbench.getNotifications();
-            console.log(`existingNotifs: ${standaloneNotifs.length}`);
+            logTestMessage(`existingNotifs: ${standaloneNotifs.length}`);
 
             for (const notif of standaloneNotifs) {
                 try {
                     const message = await notif.getMessage();
-                    console.log(`Dismissing notification: '${message}'`);
+                    logTestMessage(`Dismissing notification: '${message}'`);
                     await notif.dismiss();
                 } catch (e) {
-                    console.warn(`Failed to dismiss standalone notification: ${e}`);
+                    logTestWarning(`Failed to dismiss standalone notification: ${e}`);
                     await tryManualDismissal();
                 }
             }
         } catch (e) {
-            console.log("No existing notifications to dismiss or failed to access them:", e);
+            logTestMessage("No existing notifications to dismiss or failed to access them:", e);
         }
     }
 
@@ -106,37 +112,45 @@ suite("Extension Test Suite", () => {
                 const button = await browser.$(selector);
                 if (await button.isDisplayed()) {
                     await button.click();
-                    console.log(`Successfully dismissed with selector: ${selector}`);
+                    logTestMessage(`Successfully dismissed with selector: ${selector}`);
                     return;
                 }
             } catch (e) {
                 // Try next selector
             }
         }
-        console.warn("Could not dismiss notification with any known selector");
+        logTestWarning("Could not dismiss notification with any known selector");
     }
 
     async function clearNotificationsRobustly(workbench: Workbench, maxRetries = 3) {
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                console.log(`Attempt ${attempt} to clear notifications`);
+                logTestMessage(`Attempt ${attempt} to clear notifications`);
 
                 await waitUntilNotificationsDisappear(workbench);
 
                 const remainingNotifs = await workbench.getNotifications();
                 if (remainingNotifs.length === 0) {
-                    console.log("All notifications successfully cleared");
+                    logTestMessage("All notifications successfully cleared");
                     return;
                 } else {
-                    console.log(`${remainingNotifs.length} notifications still present after attempt ${attempt}`);
+                    logTestMessage(`${remainingNotifs.length} notifications still present after attempt ${attempt}`);
                 }
             } catch (e) {
-                console.warn(`Attempt ${attempt} failed:`, e);
+                logTestWarning(`Attempt ${attempt} failed:`, e);
             }
 
             await browser.pause(1000);
         }
 
-        console.warn("Could not clear all notifications after all retries, continuing with test");
+        logTestWarning("Could not clear all notifications after all retries, continuing with test");
+    }
+
+    function logTestMessage(...message: any[]) {
+        console.log(`[${new Date().toISOString()}][${testContext.test?.title}] `, ...message);
+    }
+
+    function logTestWarning(...message: any[]) {
+        console.warn(`[${new Date().toISOString()}][${testContext.test?.title}] `, ...message);
     }
 });

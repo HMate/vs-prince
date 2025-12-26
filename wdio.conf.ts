@@ -59,7 +59,7 @@ export const config: WebdriverIO.Config = {
         {
             browserName: "vscode",
             browserVersion: "1.102.3", // possible: "stable", "insiders" or version e.g. "1.80.0"
-            "wdio:enforceWebDriverClassic": true,
+            "wdio:enforceWebDriverClassic": true, // this is needed because vscode not supports WebDriver BiDi yet
             "wdio:vscodeOptions": {
                 // points to directory where extension package.json is located
                 extensionPath: __dirname,
