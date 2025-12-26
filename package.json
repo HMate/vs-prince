@@ -53,8 +53,8 @@
         "package": "npm run compileWebViewProduction && npm run compileProductionExtension",
         "link-pyprince": "node build/link-pyprince.js",
         "lint": "eslint src --ext ts",
-        "test": "ts-mocha src/test/unit-tests/*.test.ts",
-        "wdio": "wdio run ./wdio.conf.ts"
+        "test:unit-test": "ts-mocha src/test/unit-tests/*.test.ts",
+        "test:system-test": "wdio run ./wdio.conf.ts"
     },
     "extensionDependencies": [
         "ms-python.python"

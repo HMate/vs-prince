@@ -86,6 +86,10 @@ Testing library/Frameowork:
 Assertion library:
 - Chai
 
+### Problem - answers for current testing
+
+- Wdio systest does not start, because the browser folder exists in the User/AppData/Local/Temp/chromedriver folder - delete the folder
+
 ## Building
 
 in short for development:
