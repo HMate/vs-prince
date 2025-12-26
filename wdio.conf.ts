@@ -128,7 +128,8 @@ export const config: WebdriverIO.Config = {
             "visual",
             {
                 baselineFolder: `${__dirname}/test-screenshots/baseline`,
-                screenshotPath: `${__dirname}/test-screenshots/current`
+                screenshotPath: `${__dirname}/test-screenshots/current`,
+                autoSaveBaseline: false
             } satisfies VisualServiceOptions,
         ],
     ],

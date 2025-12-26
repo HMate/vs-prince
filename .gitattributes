@@ -1,0 +1,2 @@
+# Track PNG files with Git LFS
+*.png filter=lfs diff=lfs merge=lfs -text

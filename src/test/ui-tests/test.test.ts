@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { browser } from "@wdio/globals";
+import { Workbench } from "wdio-vscode-service";
 
 suite("Extension Test Suite", () => {
-    test("Message test", async () => {
+    test("Message test", async function () {
         const workbench = await browser.getWorkbench();
         await browser.executeWorkbench(async (vscode, param1) => {
             vscode.window.showInformationMessage(`Start all tests. ${param1} !`);
@@ -14,20 +15,12 @@ suite("Extension Test Suite", () => {
         expect(message).to.eq("Start all tests. from wdio and vsprince !!! -__- !");
     });
 
-    test("Workspace test", async () => {
+    test("Workspace test", async function () {
         await installPython();
 
-        const workbench = await browser.getWorkbench();
-        try {
-            const existingNotifs = await workbench.getNotifications();
-            console.log(`existingNotifs: ${existingNotifs.length}`);
-            // Note: hiding notifications only works if the test window has focus. I'm not sure why, or how to fix this
-            for (const notif of existingNotifs) {
-                await notif.dismiss();
-            }
-        } catch (e) {
-            // Ignore if no notifications to clear
-        }
+        const workbench: Workbench = await browser.getWorkbench();
+
+        await clearNotificationsRobustly(workbench);
 
         // TODO: Delete, or do something about pyprince cache file
         await browser.executeWorkbench(async (vscode) => {
@@ -40,8 +33,7 @@ suite("Extension Test Suite", () => {
             await vscode.commands.executeCommand("vs-prince.visualize-py-deps");
         });
 
-        await browser.switchFrame($("iframe.webview"));
-        await browser.switchFrame($('iframe[id="active-frame"]'));
+        await switchToWebviewIFrame(browser);
 
         await browser.waitUntil(
             async () => {
@@ -59,6 +51,11 @@ suite("Extension Test Suite", () => {
         expect(elementMismatchPercentage).to.be.lessThan(0.1);
     });
 
+    async function switchToWebviewIFrame(browser: WebdriverIO.Browser) {
+        await browser.switchFrame($("iframe.webview"));
+        await browser.switchFrame($('iframe[id="active-frame"]'));
+    }
+
     async function installPython() {
         await browser.executeWorkbench(async (vscode) => {
             await vscode.commands.executeCommand("workbench.extensions.installExtension", "ms-python.python");
@@ -70,5 +67,76 @@ suite("Extension Test Suite", () => {
                 await pythonExtension.activate();
             }
         });
+    }
+
+    async function waitUntilNotificationsDisappear(workbench: Workbench) {
+        try {
+            const standaloneNotifs = await workbench.getNotifications();
+            console.log(`existingNotifs: ${standaloneNotifs.length}`);
+
+            for (const notif of standaloneNotifs) {
+                try {
+                    const message = await notif.getMessage();
+                    console.log(`Dismissing notification: '${message}'`);
+                    await notif.dismiss();
+                } catch (e) {
+                    console.warn(`Failed to dismiss standalone notification: ${e}`);
+                    await tryManualDismissal();
+                }
+            }
+        } catch (e) {
+            console.log("No existing notifications to dismiss or failed to access them:", e);
+        }
+    }
+
+    /**
+     * Current version of wdio is outdated, it does not handle notifiations correctly, so try close them manually.
+     */
+    async function tryManualDismissal() {
+        const possibleSelectors = [
+            ".codicon-notifications-clear",
+            ".codicon-close",
+            ".clear-notification-action",
+            ".notification .codicon-close",
+            ".notification-toast .codicon-close",
+        ];
+
+        for (const selector of possibleSelectors) {
+            try {
+                const button = await browser.$(selector);
+                if (await button.isDisplayed()) {
+                    await button.click();
+                    console.log(`Successfully dismissed with selector: ${selector}`);
+                    return;
+                }
+            } catch (e) {
+                // Try next selector
+            }
+        }
+        console.warn("Could not dismiss notification with any known selector");
+    }
+
+    async function clearNotificationsRobustly(workbench: Workbench, maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(`Attempt ${attempt} to clear notifications`);
+
+                await waitUntilNotificationsDisappear(workbench);
+
+                const remainingNotifs = await workbench.getNotifications();
+                if (remainingNotifs.length === 0) {
+                    console.log("All notifications successfully cleared");
+                    return;
+                } else {
+                    console.log(`${remainingNotifs.length} notifications still present after attempt ${attempt}`);
+                }
+            } catch (e) {
+                console.warn(`Attempt ${attempt} failed:`, e);
+            }
+
+            await browser.pause(1000);
+        }
+
+        console.warn("Could not clear all notifications after all retries, continuing with test");
     }
 });

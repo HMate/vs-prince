@@ -7,7 +7,7 @@ node_modules
 # Testing
 .vscode-test/
 test-logs/
-test-screenshots/
+test-screenshots/current
 test-workspace/.pyprince/
 .wdio-vscode-service/
 
