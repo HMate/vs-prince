@@ -63,6 +63,7 @@ suite("Extension Test Suite", () => {
     }
 
     async function installPython() {
+        logTestMessage(`Install Python extension for VSCode`);
         await browser.executeWorkbench(async (vscode) => {
             await vscode.commands.executeCommand("workbench.extensions.installExtension", "ms-python.python");
         });

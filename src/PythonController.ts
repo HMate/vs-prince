@@ -83,7 +83,7 @@ export class PythonController {
             this.logger.log(`Failed to get pyprince info: ${fileInfo.message}`);
             return;
         }
-        this.logger.log(`Using pyprince modified at ${fileInfo.mtime}`);
+        this.logger.log(`Using pyprince from '${fileInfo.filePath}' modified at ${fileInfo.mtime}`);
         const result = this.callPrince(pythonPath, ...args);
         this.logger.log(`Using pyprince version ${result} modified at ${fileInfo.mtime}`);
     }
