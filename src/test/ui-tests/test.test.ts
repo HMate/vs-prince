@@ -54,7 +54,10 @@ suite("Extension Test Suite", () => {
         const svgRoot = await browser.$("#prince-svg");
         const elementMismatchPercentage = await browser.checkElement(svgRoot, "element-test");
         logTestMessage(`Element mismatch percentage: ${elementMismatchPercentage} %`);
-        expect(elementMismatchPercentage).to.be.lessThan(0.1);
+
+        // 3.5 is due to order of imports can change, and reltest package positions can vary
+        const differenceThreshold = 3.5;
+        expect(elementMismatchPercentage).to.be.lessThan(differenceThreshold);
     });
 
     async function switchToWebviewIFrame(browser: WebdriverIO.Browser) {
