@@ -11,7 +11,8 @@
         "node_modules",
         "dist",
         "media",
-        "docs"
+        "docs",
+        ".wdio-vscode-service"
     ],
     "verbose": true,
     "ext": "js json ts scss css html gif png jpg jpeg svg"
