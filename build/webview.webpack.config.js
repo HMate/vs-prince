@@ -62,7 +62,7 @@ const config = {
                 test: /\.ttf$/i,
                 type: "asset/resource",
                 generator: {
-                    filename: "resources/font/[name].[ext][query]",
+                    filename: "resources/font/[name][ext][query]",
                 },
             },
             {
