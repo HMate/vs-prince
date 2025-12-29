@@ -1,4 +1,5 @@
 {
+    // reference: https://www.typescriptlang.org/tsconfig/
     "compilerOptions": {
         "module": "es2020",
         "moduleResolution": "bundler",
@@ -16,7 +17,8 @@
         "plugins": [{ "name": "typescript-plugin-css-modules" }],
         /* Additional Checks */
         "noImplicitReturns": true /* Report error when not all code paths in function return a value. */,
-        "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */
+        "noFallthroughCasesInSwitch": true /* Report errors for fallthrough cases in switch statement. */,
+        "noUncheckedSideEffectImports": true /* Ensure that import "some-file" with side effects some-file actually exists */
     },
     "include": [
         "src/**/*"
